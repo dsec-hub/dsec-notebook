@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_PATH: data/dsec.db
+    volumes:
+      - dsec-data:/app/data
+
+volumes:
+  dsec-data:

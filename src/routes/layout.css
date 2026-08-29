@@ -1,0 +1,61 @@
+@import 'tailwindcss';
+
+@theme {
+	--font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+	--font-serif: 'EB Garamond', 'Iowan Old Style', Palatino, Georgia, serif;
+	--color-primary: #ea4c65;
+	--color-primary-dark: #d43d56;
+	--color-secondary: #00bcd4;
+	--color-secondary-dark: #00a5bb;
+	--color-ink: #111111;
+	--color-muted: #737373;
+	--color-faint: #a3a3a3;
+	--color-rule: #e5e5e5;
+}
+
+html {
+	font-family: var(--font-sans);
+	color: var(--color-ink);
+	background: #fff;
+	-webkit-font-smoothing: antialiased;
+}
+
+.page {
+	@apply mx-auto max-w-4xl px-4 py-10 sm:px-6;
+}
+
+.kicker {
+	@apply font-sans text-[11px] font-medium uppercase tracking-[0.18em] text-faint;
+}
+
+.btn-primary {
+	@apply inline-flex items-center justify-center rounded-none border border-primary bg-primary px-5 py-2.5 text-[11px] font-medium uppercase tracking-[0.14em] text-white transition-colors hover:bg-primary-dark hover:border-primary-dark disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.btn-secondary {
+	@apply inline-flex items-center justify-center rounded-none border border-secondary bg-transparent px-5 py-2.5 text-[11px] font-medium uppercase tracking-[0.14em] text-secondary transition-colors hover:bg-secondary hover:text-white disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.btn-ghost {
+	@apply inline-flex items-center justify-center rounded-none border border-ink bg-transparent px-5 py-2.5 text-[11px] font-medium uppercase tracking-[0.14em] text-ink transition-colors hover:border-primary hover:text-primary;
+}
+
+.field {
+	@apply block w-full rounded-none border border-rule bg-white px-3 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-faint focus:border-primary;
+}
+
+.chip {
+	@apply inline-flex items-center rounded-none border border-rule bg-white px-3 py-1.5 font-sans text-[11px] font-medium uppercase tracking-[0.12em] text-ink transition-colors hover:border-ink;
+}
+
+.chip-active {
+	@apply border-primary bg-primary text-white hover:border-primary-dark hover:bg-primary-dark;
+}
+
+.nav-link {
+	@apply text-[11px] font-medium uppercase tracking-[0.2em] text-muted transition-colors hover:text-primary;
+}
+
+.nav-link-active {
+	@apply text-ink;
+}
