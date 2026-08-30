@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 
-describe('auth store', () => {
-  it('should be importable', () => {
-    expect(true).toBe(true);
-  });
+describe("auth store", () => {
+	it("should be importable", () => {
+		expect(true).toBe(true);
+	});
 });

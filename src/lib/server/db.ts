@@ -1,14 +1,14 @@
-import { DatabaseSync } from 'node:sqlite';
-import { mkdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { DatabaseSync } from "node:sqlite";
+import { mkdirSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { randomUUID } from "node:crypto";
 
-const DB_PATH = resolve(process.env.DATABASE_PATH ?? 'data/dsec.db');
+const DB_PATH = resolve(process.env.DATABASE_PATH ?? "data/dsec.db");
 
 let db: DatabaseSync | null = null;
 
 function createSchema(database: DatabaseSync) {
-  database.exec(`
+	database.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT NOT NULL UNIQUE,
@@ -92,82 +92,138 @@ function createSchema(database: DatabaseSync) {
 }
 
 const SEED_TOPICS = [
-  { name: 'Algorithms', slug: 'algorithms', description: 'Algorithm design, analysis, and common patterns' },
-  { name: 'Data Structures', slug: 'data-structures', description: 'Arrays, linked lists, trees, graphs, and more' },
-  { name: 'Networking', slug: 'networking', description: 'Computer networks, protocols, and architectures' },
-  { name: 'Cybersecurity', slug: 'cybersecurity', description: 'Security principles, threats, and defenses' },
-  { name: 'Databases', slug: 'databases', description: 'Relational and NoSQL databases, SQL, and design' },
-  { name: 'Web Development', slug: 'web-development', description: 'HTML, CSS, JavaScript, and frameworks' },
-  { name: 'Operating Systems', slug: 'operating-systems', description: 'OS concepts, processes, memory, and file systems' },
-  { name: 'Software Engineering', slug: 'software-engineering', description: 'Design patterns, testing, and methodologies' },
-  { name: 'Programming Languages', slug: 'programming-languages', description: 'Language concepts, paradigms, and syntax' },
-  { name: 'Mathematics', slug: 'mathematics', description: 'Discrete math, linear algebra, statistics for CS' },
-  { name: 'Machine Learning', slug: 'machine-learning', description: 'ML concepts, models, and techniques' },
-  { name: 'Cloud Computing', slug: 'cloud-computing', description: 'Cloud platforms, services, and architecture' },
-  { name: 'Mobile Development', slug: 'mobile-development', description: 'iOS, Android, and cross-platform development' },
-  { name: 'DevOps', slug: 'devops', description: 'CI/CD, containers, and infrastructure' },
-  { name: 'Computer Architecture', slug: 'computer-architecture', description: 'CPU, memory, and hardware design' },
+	{
+		name: "Algorithms",
+		slug: "algorithms",
+		description: "Algorithm design, analysis, and common patterns",
+	},
+	{
+		name: "Data Structures",
+		slug: "data-structures",
+		description: "Arrays, linked lists, trees, graphs, and more",
+	},
+	{
+		name: "Networking",
+		slug: "networking",
+		description: "Computer networks, protocols, and architectures",
+	},
+	{
+		name: "Cybersecurity",
+		slug: "cybersecurity",
+		description: "Security principles, threats, and defenses",
+	},
+	{
+		name: "Databases",
+		slug: "databases",
+		description: "Relational and NoSQL databases, SQL, and design",
+	},
+	{
+		name: "Web Development",
+		slug: "web-development",
+		description: "HTML, CSS, JavaScript, and frameworks",
+	},
+	{
+		name: "Operating Systems",
+		slug: "operating-systems",
+		description: "OS concepts, processes, memory, and file systems",
+	},
+	{
+		name: "Software Engineering",
+		slug: "software-engineering",
+		description: "Design patterns, testing, and methodologies",
+	},
+	{
+		name: "Programming Languages",
+		slug: "programming-languages",
+		description: "Language concepts, paradigms, and syntax",
+	},
+	{
+		name: "Mathematics",
+		slug: "mathematics",
+		description: "Discrete math, linear algebra, statistics for CS",
+	},
+	{
+		name: "Machine Learning",
+		slug: "machine-learning",
+		description: "ML concepts, models, and techniques",
+	},
+	{
+		name: "Cloud Computing",
+		slug: "cloud-computing",
+		description: "Cloud platforms, services, and architecture",
+	},
+	{
+		name: "Mobile Development",
+		slug: "mobile-development",
+		description: "iOS, Android, and cross-platform development",
+	},
+	{ name: "DevOps", slug: "devops", description: "CI/CD, containers, and infrastructure" },
+	{
+		name: "Computer Architecture",
+		slug: "computer-architecture",
+		description: "CPU, memory, and hardware design",
+	},
 ];
 
 const SEED_UNITS = [
-  { code: 'SIT102', name: 'Introduction to Programming' },
-  { code: 'SIT111', name: 'Computer Systems' },
-  { code: 'SIT192', name: 'Discrete Mathematics' },
-  { code: 'SIT202', name: 'Computer Networks and Communication' },
-  { code: 'SIT210', name: 'Embedded Systems Development' },
-  { code: 'SIT221', name: 'Data Structures and Algorithms' },
-  { code: 'SIT232', name: 'Object-Oriented Development' },
-  { code: 'SIT281', name: 'Cryptography' },
-  { code: 'SIT282', name: 'Computer Forensics' },
-  { code: 'SIT283', name: 'Ethical Hacking' },
-  { code: 'SIT284', name: 'Cyber Security Management' },
-  { code: 'SIT313', name: 'Full Stack Web Development' },
-  { code: 'SIT315', name: 'Programming Paradigms' },
-  { code: 'SIT323', name: 'Cloud Native Application Development' },
-  { code: 'SIT331', name: 'IT Security' },
-  { code: 'SIT374', name: 'Team Project (A) - Project Management' },
-  { code: 'SIT378', name: 'Team Project (B) - Execution' },
-  { code: 'SIT379', name: 'Ethical Hacking' },
-  { code: 'SIT384', name: 'Cyber Security Analytics' },
-  { code: 'SIT393', name: 'Computing Internship' },
-  { code: 'MIS771', name: 'Business Intelligence and Data Warehousing' },
-  { code: 'MIS772', name: 'Predictive Analytics' },
-  { code: 'MIS782', name: 'Information Security Governance' },
-  { code: 'MIS784', name: 'Cyber Security Management and Practices' },
-  { code: 'MIS785', name: 'IT Strategy and Governance' },
-  { code: 'MIS798', name: 'Business Process Management' },
+	{ code: "SIT102", name: "Introduction to Programming" },
+	{ code: "SIT111", name: "Computer Systems" },
+	{ code: "SIT192", name: "Discrete Mathematics" },
+	{ code: "SIT202", name: "Computer Networks and Communication" },
+	{ code: "SIT210", name: "Embedded Systems Development" },
+	{ code: "SIT221", name: "Data Structures and Algorithms" },
+	{ code: "SIT232", name: "Object-Oriented Development" },
+	{ code: "SIT281", name: "Cryptography" },
+	{ code: "SIT282", name: "Computer Forensics" },
+	{ code: "SIT283", name: "Ethical Hacking" },
+	{ code: "SIT284", name: "Cyber Security Management" },
+	{ code: "SIT313", name: "Full Stack Web Development" },
+	{ code: "SIT315", name: "Programming Paradigms" },
+	{ code: "SIT323", name: "Cloud Native Application Development" },
+	{ code: "SIT331", name: "IT Security" },
+	{ code: "SIT374", name: "Team Project (A) - Project Management" },
+	{ code: "SIT378", name: "Team Project (B) - Execution" },
+	{ code: "SIT379", name: "Ethical Hacking" },
+	{ code: "SIT384", name: "Cyber Security Analytics" },
+	{ code: "SIT393", name: "Computing Internship" },
+	{ code: "MIS771", name: "Business Intelligence and Data Warehousing" },
+	{ code: "MIS772", name: "Predictive Analytics" },
+	{ code: "MIS782", name: "Information Security Governance" },
+	{ code: "MIS784", name: "Cyber Security Management and Practices" },
+	{ code: "MIS785", name: "IT Strategy and Governance" },
+	{ code: "MIS798", name: "Business Process Management" },
 ];
 
 function seed(database: DatabaseSync) {
-  const existing = database.prepare('SELECT COUNT(*) AS c FROM topics').get() as { c: number };
-  if (existing.c > 0) return;
+	const existing = database.prepare("SELECT COUNT(*) AS c FROM topics").get() as { c: number };
+	if (existing.c > 0) return;
 
-  const insertTopic = database.prepare(
-    'INSERT INTO topics (id, name, slug, description) VALUES (?, ?, ?, ?)'
-  );
-  const insertUnit = database.prepare('INSERT INTO units (id, code, name) VALUES (?, ?, ?)');
+	const insertTopic = database.prepare(
+		"INSERT INTO topics (id, name, slug, description) VALUES (?, ?, ?, ?)",
+	);
+	const insertUnit = database.prepare("INSERT INTO units (id, code, name) VALUES (?, ?, ?)");
 
-  database.exec('BEGIN');
-  try {
-    for (const topic of SEED_TOPICS) {
-      insertTopic.run(randomUUID(), topic.name, topic.slug, topic.description ?? null);
-    }
-    for (const unit of SEED_UNITS) {
-      insertUnit.run(randomUUID(), unit.code, unit.name);
-    }
-    database.exec('COMMIT');
-  } catch (err) {
-    database.exec('ROLLBACK');
-    throw err;
-  }
+	database.exec("BEGIN");
+	try {
+		for (const topic of SEED_TOPICS) {
+			insertTopic.run(randomUUID(), topic.name, topic.slug, topic.description ?? null);
+		}
+		for (const unit of SEED_UNITS) {
+			insertUnit.run(randomUUID(), unit.code, unit.name);
+		}
+		database.exec("COMMIT");
+	} catch (err) {
+		database.exec("ROLLBACK");
+		throw err;
+	}
 }
 
 export function getDb(): DatabaseSync {
-  if (!db) {
-    mkdirSync(dirname(DB_PATH), { recursive: true });
-    db = new DatabaseSync(DB_PATH);
-    createSchema(db);
-    seed(db);
-  }
-  return db;
+	if (!db) {
+		mkdirSync(dirname(DB_PATH), { recursive: true });
+		db = new DatabaseSync(DB_PATH);
+		createSchema(db);
+		seed(db);
+	}
+	return db;
 }

@@ -1,12 +1,12 @@
 services:
-  app:
-    build: .
-    ports:
-      - "4073:3000"
-    environment:
-      DATABASE_PATH: data/dsec.db
-    volumes:
-      - dsec-data:/app/data
+    app:
+        build: .
+        ports:
+            - "4073:3000"
+        environment:
+            DATABASE_PATH: data/dsec.db
+        volumes:
+            - dsec-data:/app/data
 
 volumes:
-  dsec-data:
+    dsec-data:

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import VoteStack from './VoteStack.svelte';
+	import VoteStack from "./VoteStack.svelte";
 
 	let {
 		href,
@@ -8,25 +8,27 @@
 		meta,
 		voteCount = 0,
 		targetType,
-		targetId
+		targetId,
 	}: {
 		href: string;
 		title: string;
 		unitCode?: string;
 		meta: string;
 		voteCount?: number;
-		targetType: 'note' | 'question';
+		targetType: "note" | "question";
 		targetId: string;
 	} = $props();
 </script>
 
-<article class="flex gap-4 border-b border-rule py-5">
+<article class="border-rule flex gap-4 border-b py-5">
 	<VoteStack count={voteCount} {targetType} {targetId} />
-	<a {href} class="min-w-0 flex-1 group">
+	<a {href} class="group min-w-0 flex-1">
 		{#if unitCode}
 			<p class="kicker">{unitCode}</p>
 		{/if}
-		<h3 class="mt-1 font-sans text-[15px] font-semibold leading-snug text-ink group-hover:text-primary">
+		<h3
+			class="text-ink group-hover:text-primary mt-1 font-sans text-[15px] leading-snug font-semibold"
+		>
 			{title}
 		</h3>
 		<p class="kicker mt-1.5">{meta}</p>

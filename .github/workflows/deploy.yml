@@ -1,31 +1,31 @@
 name: Deploy to VPS
 
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+    push:
+        branches: [main]
+    workflow_dispatch:
 
 jobs:
-  deploy:
-    runs-on: self-hosted
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    deploy:
+        runs-on: self-hosted
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Build and start containers
-        run: docker compose up -d --build --remove-orphans
+            - name: Build and start containers
+              run: docker compose up -d --build --remove-orphans
 
-      - name: Prune dangling images
-        run: docker image prune -f
+            - name: Prune dangling images
+              run: docker image prune -f
 
-      - name: Health check
-        run: |
-          for i in $(seq 1 30); do
-            if curl -fsS http://localhost:4073 > /dev/null; then
-              echo "App is up"
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "App did not become healthy" >&2
-          exit 1
+            - name: Health check
+              run: |
+                  for i in $(seq 1 30); do
+                    if curl -fsS http://localhost:4073 > /dev/null; then
+                      echo "App is up"
+                      exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "App did not become healthy" >&2
+                  exit 1

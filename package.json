@@ -1,7 +1,7 @@
 {
 	"name": "dsec-notebook",
-	"private": true,
 	"version": "0.0.1",
+	"private": true,
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -11,7 +11,9 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run"
+		"test": "npm run test:unit -- --run",
+		"fmt": "oxfmt",
+		"fmt:check": "oxfmt --check"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^5.5.7",
@@ -20,6 +22,7 @@
 		"@tailwindcss/vite": "^4.3.0",
 		"@types/node": "^26.3.0",
 		"@vitest/browser-playwright": "^4.1.8",
+		"oxfmt": "^0.65.0",
 		"playwright": "^1.60.0",
 		"svelte": "^5.56.1",
 		"svelte-check": "^4.6.0",

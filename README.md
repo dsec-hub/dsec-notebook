@@ -33,23 +33,23 @@ A centralised resource hub for Deakin University students studying **SIT** (IT, 
 
 1. Clone the repository and install dependencies:
 
-   ```sh
-   npm install
-   ```
+    ```sh
+    npm install
+    ```
 
 2. Configure environment variables (optional):
 
-   ```sh
-   cp .env .env.local
-   ```
+    ```sh
+    cp .env .env.local
+    ```
 
-   The only variable is `DATABASE_PATH`, which defaults to `data/dsec.db`.
+    The only variable is `DATABASE_PATH`, which defaults to `data/dsec.db`.
 
 3. Start the development server:
 
-   ```sh
-   npm run dev
-   ```
+    ```sh
+    npm run dev
+    ```
 
 4. Open the URL printed in the terminal (usually `http://localhost:5173`).
 
