@@ -5,6 +5,8 @@ services:
             - "4073:3000"
         environment:
             DATABASE_PATH: data/dsec.db
+            RESEND_API_KEY: ${RESEND_API_KEY:-}
+            RESEND_FROM: ${RESEND_FROM:-DSEC Notebook <onboarding@resend.dev>}
         volumes:
             - dsec-data:/app/data
 

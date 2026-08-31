@@ -37,13 +37,15 @@ A centralised resource hub for Deakin University students studying **SIT** (IT, 
     npm install
     ```
 
-2. Configure environment variables (optional):
+2. Configure environment variables:
 
     ```sh
     cp .env .env.local
     ```
 
-    The only variable is `DATABASE_PATH`, which defaults to `data/dsec.db`.
+    `DATABASE_PATH` defaults to `data/dsec.db`. To send verification emails, set
+    `RESEND_API_KEY` (get one at <https://resend.com/api-keys>). Without it, email
+    verification will fail.
 
 3. Start the development server:
 
@@ -55,11 +57,13 @@ A centralised resource hub for Deakin University students studying **SIT** (IT, 
 
 ## Environment variables
 
-| Variable        | Description                             | Default        |
-| --------------- | --------------------------------------- | -------------- |
-| `DATABASE_PATH` | Path to the SQLite database file        | `data/dsec.db` |
-| `HOST`          | Host the Node server binds to (build)   | `0.0.0.0`      |
-| `PORT`          | Port the Node server listens on (build) | `3000`         |
+| Variable         | Description                             | Default                                 |
+| ---------------- | --------------------------------------- | --------------------------------------- |
+| `DATABASE_PATH`  | Path to the SQLite database file        | `data/dsec.db`                          |
+| `RESEND_API_KEY` | Resend API key for verification emails  | _(required)_                            |
+| `RESEND_FROM`    | "From" address for verification emails  | `DSEC Notebook <onboarding@resend.dev>` |
+| `HOST`           | Host the Node server binds to (build)   | `0.0.0.0`                               |
+| `PORT`           | Port the Node server listens on (build) | `3000`                                  |
 
 ## Scripts
 
@@ -114,7 +118,7 @@ src/
 - The frontend calls a single JSON API endpoint (`POST /api`) with a function name and arguments.
 - The server dispatches those calls to handlers in `src/lib/server/api.ts`, backed by SQLite.
 - On first run, the database is created automatically and seeded with common Deakin SIT/Math units and CS/maths topics.
-- Authentication is session-token based: signing in with a valid `@deakin.edu.au` email creates or reuses a user and stores a token in `localStorage`.
+- Authentication is email-verified: signing in with a `@deakin.edu.au` address sends a 6-digit code via Resend, which the user must enter to prove they own the inbox. Verified users are created or reused and given a session token stored in `localStorage`.
 
 ## Data model
 
@@ -127,6 +131,7 @@ The SQLite database contains the following tables:
 - `questions` — student questions
 - `comments` — note comments and question answers
 - `votes` — upvotes/downvotes on notes and questions
+- `email_verifications` — pending email verification codes
 
 ## Disclaimer
 

@@ -2,8 +2,9 @@ import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
+import { DATABASE_PATH } from "$env/static/private";
 
-const DB_PATH = resolve(process.env.DATABASE_PATH ?? "data/dsec.db");
+const DB_PATH = resolve(DATABASE_PATH ?? "data/dsec.db");
 
 let db: DatabaseSync | null = null;
 
@@ -77,6 +78,15 @@ function createSchema(database: DatabaseSync) {
       targetType TEXT NOT NULL,
       targetId TEXT NOT NULL,
       value INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS email_verifications (
+      email TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      codeHash TEXT NOT NULL,
+      expiresAt INTEGER NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      createdAt INTEGER NOT NULL
     );
 
     CREATE INDEX IF NOT EXISTS idx_notes_topic ON notes(topicId);

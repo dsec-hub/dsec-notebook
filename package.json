@@ -15,6 +15,9 @@
 		"fmt": "oxfmt",
 		"fmt:check": "oxfmt --check"
 	},
+	"dependencies": {
+		"resend": "^6.25.0"
+	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^5.5.7",
 		"@sveltejs/kit": "^2.63.0",

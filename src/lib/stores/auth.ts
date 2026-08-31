@@ -25,13 +25,17 @@ export async function initAuth() {
 	}
 }
 
-export async function login(email: string, name: string) {
-	const result = await mutation("users:register", { email, name });
+export async function requestCode(email: string, name: string) {
+	return await mutation("auth:requestCode", { email, name });
+}
+
+export async function verifyCode(email: string, code: string) {
+	const result = await mutation("auth:verifyCode", { email, code });
 	localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: result.token }));
 	currentUser.set({
 		_id: result.userId,
 		email: email.toLowerCase(),
-		name,
+		name: result.name,
 		sessionToken: result.token,
 		_creationTime: Date.now(),
 	} as UserDoc);

@@ -1,7 +1,11 @@
 import { getDb } from "./db";
-import { randomUUID } from "node:crypto";
+import { createHash, randomInt, randomUUID } from "node:crypto";
+import { sendVerificationCode } from "./email";
 
 const DEAKIN_DOMAIN = "deakin.edu.au";
+const CODE_TTL_MS = 10 * 60 * 1000;
+const REQUEST_COOLDOWN_MS = 60 * 1000;
+const MAX_ATTEMPTS = 5;
 
 type Db = ReturnType<typeof getDb>;
 
@@ -16,6 +20,23 @@ function generateToken(): string {
 		result += chars.charAt(Math.floor(Math.random() * chars.length));
 	}
 	return result;
+}
+
+function generateCode(): string {
+	return String(randomInt(0, 1000000)).padStart(6, "0");
+}
+
+function hashCode(code: string): string {
+	return createHash("sha256").update(code).digest("hex");
+}
+
+function normalizeEmail(email: string): string {
+	const normalized = email.trim().toLowerCase();
+	const emailDomain = normalized.split("@")[1]?.toLowerCase();
+	if (emailDomain !== DEAKIN_DOMAIN) {
+		throw new Error(`Only @${DEAKIN_DOMAIN} email addresses are allowed`);
+	}
+	return normalized;
 }
 
 function requireAuth(db: Db, token: string): Record<string, any> {
@@ -34,13 +55,7 @@ function mapQuestion(row: Record<string, any>): Record<string, any> {
 
 // ---- users ----
 
-function usersRegister(db: Db, args: { email: string; name: string }) {
-	const email = args.email.toLowerCase();
-	const emailDomain = email.split("@")[1]?.toLowerCase();
-	if (emailDomain !== DEAKIN_DOMAIN) {
-		throw new Error(`Only @${DEAKIN_DOMAIN} email addresses are allowed`);
-	}
-
+function createOrReuseUser(db: Db, email: string, name: string) {
 	const existing = db
 		.prepare(
 			"SELECT id AS _id, email, name, sessionToken, createdAt AS _creationTime FROM users WHERE email = ?",
@@ -50,15 +65,84 @@ function usersRegister(db: Db, args: { email: string; name: string }) {
 	const token = generateToken();
 
 	if (existing) {
-		db.prepare("UPDATE users SET sessionToken = ? WHERE id = ?").run(token, existing._id);
-		return { userId: existing._id, token, name: existing.name };
+		db.prepare("UPDATE users SET sessionToken = ?, name = ? WHERE id = ?").run(
+			token,
+			name,
+			existing._id,
+		);
+		return { userId: existing._id, token, name };
 	}
 
 	const id = newId();
 	db.prepare(
 		"INSERT INTO users (id, email, name, sessionToken, createdAt) VALUES (?, ?, ?, ?, ?)",
-	).run(id, email, args.name, token, Date.now());
-	return { userId: id, token, name: args.name };
+	).run(id, email, name, token, Date.now());
+	return { userId: id, token, name };
+}
+
+async function authRequestCode(db: Db, args: { email: string; name: string }) {
+	const email = normalizeEmail(args.email);
+	if (!args.name || !args.name.trim()) {
+		throw new Error("Name is required");
+	}
+	const name = args.name.trim();
+
+	const existing = db
+		.prepare("SELECT email, createdAt FROM email_verifications WHERE email = ?")
+		.get(email) as { email: string; createdAt: number } | undefined;
+
+	if (existing && Date.now() - existing.createdAt < REQUEST_COOLDOWN_MS) {
+		throw new Error("A code was just sent. Please wait a minute before trying again.");
+	}
+
+	const code = generateCode();
+	const codeHash = hashCode(code);
+	const now = Date.now();
+	const expiresAt = now + CODE_TTL_MS;
+
+	if (existing) {
+		db.prepare(
+			"UPDATE email_verifications SET name = ?, codeHash = ?, expiresAt = ?, attempts = 0, createdAt = ? WHERE email = ?",
+		).run(name, codeHash, expiresAt, now, email);
+	} else {
+		db.prepare(
+			"INSERT INTO email_verifications (email, name, codeHash, expiresAt, attempts, createdAt) VALUES (?, ?, ?, ?, 0, ?)",
+		).run(email, name, codeHash, expiresAt, now);
+	}
+
+	try {
+		await sendVerificationCode(email, code);
+	} catch (err) {
+		db.prepare("DELETE FROM email_verifications WHERE email = ?").run(email);
+		throw err;
+	}
+	return { ok: true };
+}
+
+function authVerifyCode(db: Db, args: { email: string; code: string }) {
+	const email = normalizeEmail(args.email);
+
+	const pending = db
+		.prepare(
+			"SELECT name, codeHash, expiresAt, attempts FROM email_verifications WHERE email = ?",
+		)
+		.get(email) as
+		| { name: string; codeHash: string; expiresAt: number; attempts: number }
+		| undefined;
+
+	if (!pending) throw new Error("No verification code requested for this email");
+	if (Date.now() > pending.expiresAt) throw new Error("Verification code has expired");
+	if (pending.attempts >= MAX_ATTEMPTS) throw new Error("Too many attempts. Request a new code.");
+
+	if (hashCode(args.code) !== pending.codeHash) {
+		db.prepare("UPDATE email_verifications SET attempts = attempts + 1 WHERE email = ?").run(
+			email,
+		);
+		throw new Error("Invalid verification code");
+	}
+
+	db.prepare("DELETE FROM email_verifications WHERE email = ?").run(email);
+	return createOrReuseUser(db, email, pending.name);
 }
 
 function usersGetByToken(db: Db, args: { token: string }) {
@@ -414,7 +498,8 @@ function getQuestionWithDetails(db: Db, args: { id: string }) {
 type Handler = (db: Db, args: any) => any;
 
 const handlers: Record<string, Handler> = {
-	"users:register": usersRegister,
+	"auth:requestCode": authRequestCode,
+	"auth:verifyCode": authVerifyCode,
 	"users:getByToken": usersGetByToken,
 	"topics:getBySlug": topicsGetBySlug,
 	"topics:getAll": topicsGetAll,
@@ -441,8 +526,8 @@ const handlers: Record<string, Handler> = {
 	"details:getQuestionWithDetails": getQuestionWithDetails,
 };
 
-export function call(fn: string, args: Record<string, any> = {}): any {
+export async function call(fn: string, args: Record<string, any> = {}): Promise<any> {
 	const handler = handlers[fn];
 	if (!handler) throw new Error(`Unknown function: ${fn}`);
-	return handler(getDb(), args ?? {});
+	return await handler(getDb(), args ?? {});
 }

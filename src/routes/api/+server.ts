@@ -15,7 +15,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	try {
-		const result = call(fn, args as Record<string, any>);
+		const result = await call(fn, args as Record<string, any>);
 		return json({ ok: true, result });
 	} catch (err: any) {
 		const message = err?.message ?? "Internal error";
