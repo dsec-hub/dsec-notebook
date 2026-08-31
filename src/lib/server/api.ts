@@ -1,6 +1,13 @@
 import { getDb } from "./db";
-import { createHash, randomInt, randomUUID } from "node:crypto";
-import { sendVerificationCode } from "./email";
+import {
+	createHash,
+	randomBytes,
+	randomInt,
+	randomUUID,
+	scryptSync,
+	timingSafeEqual,
+} from "node:crypto";
+import { sendPasswordResetCode, sendVerificationCode } from "./email";
 
 const DEAKIN_DOMAIN = "deakin.edu.au";
 const CODE_TTL_MS = 10 * 60 * 1000;
@@ -30,6 +37,28 @@ function hashCode(code: string): string {
 	return createHash("sha256").update(code).digest("hex");
 }
 
+function hashPassword(password: string): string {
+	const salt = randomBytes(16).toString("hex");
+	const hash = scryptSync(password, salt, 64).toString("hex");
+	return `${salt}:${hash}`;
+}
+
+function verifyPassword(password: string, stored: string): boolean {
+	const [salt, hash] = stored.split(":");
+	if (!salt || !hash) return false;
+	const candidate = scryptSync(password, salt, 64);
+	const expected = Buffer.from(hash, "hex");
+	if (candidate.length !== expected.length) return false;
+	return timingSafeEqual(candidate, expected);
+}
+
+function validatePassword(password: string): string {
+	if (!password || password.length < 8) {
+		throw new Error("Password must be at least 8 characters");
+	}
+	return password;
+}
+
 function normalizeEmail(email: string): string {
 	const normalized = email.trim().toLowerCase();
 	const emailDomain = normalized.split("@")[1]?.toLowerCase();
@@ -55,38 +84,13 @@ function mapQuestion(row: Record<string, any>): Record<string, any> {
 
 // ---- users ----
 
-function createOrReuseUser(db: Db, email: string, name: string) {
-	const existing = db
-		.prepare(
-			"SELECT id AS _id, email, name, sessionToken, createdAt AS _creationTime FROM users WHERE email = ?",
-		)
-		.get(email) as Record<string, any> | undefined;
-
+function issueSession(db: Db, user: { _id: string; name: string }) {
 	const token = generateToken();
-
-	if (existing) {
-		db.prepare("UPDATE users SET sessionToken = ?, name = ? WHERE id = ?").run(
-			token,
-			name,
-			existing._id,
-		);
-		return { userId: existing._id, token, name };
-	}
-
-	const id = newId();
-	db.prepare(
-		"INSERT INTO users (id, email, name, sessionToken, createdAt) VALUES (?, ?, ?, ?, ?)",
-	).run(id, email, name, token, Date.now());
-	return { userId: id, token, name };
+	db.prepare("UPDATE users SET sessionToken = ? WHERE id = ?").run(token, user._id);
+	return { userId: user._id, token, name: user.name };
 }
 
-async function authRequestCode(db: Db, args: { email: string; name: string }) {
-	const email = normalizeEmail(args.email);
-	if (!args.name || !args.name.trim()) {
-		throw new Error("Name is required");
-	}
-	const name = args.name.trim();
-
+async function sendCode(db: Db, email: string, name: string, kind: "verification" | "reset") {
 	const existing = db
 		.prepare("SELECT email, createdAt FROM email_verifications WHERE email = ?")
 		.get(email) as { email: string; createdAt: number } | undefined;
@@ -111,7 +115,11 @@ async function authRequestCode(db: Db, args: { email: string; name: string }) {
 	}
 
 	try {
-		await sendVerificationCode(email, code);
+		if (kind === "reset") {
+			await sendPasswordResetCode(email, code);
+		} else {
+			await sendVerificationCode(email, code);
+		}
 	} catch (err) {
 		db.prepare("DELETE FROM email_verifications WHERE email = ?").run(email);
 		throw err;
@@ -119,9 +127,7 @@ async function authRequestCode(db: Db, args: { email: string; name: string }) {
 	return { ok: true };
 }
 
-function authVerifyCode(db: Db, args: { email: string; code: string }) {
-	const email = normalizeEmail(args.email);
-
+function verifyAndConsumeCode(db: Db, email: string, code: string): { name: string } {
 	const pending = db
 		.prepare(
 			"SELECT name, codeHash, expiresAt, attempts FROM email_verifications WHERE email = ?",
@@ -134,7 +140,7 @@ function authVerifyCode(db: Db, args: { email: string; code: string }) {
 	if (Date.now() > pending.expiresAt) throw new Error("Verification code has expired");
 	if (pending.attempts >= MAX_ATTEMPTS) throw new Error("Too many attempts. Request a new code.");
 
-	if (hashCode(args.code) !== pending.codeHash) {
+	if (hashCode(code) !== pending.codeHash) {
 		db.prepare("UPDATE email_verifications SET attempts = attempts + 1 WHERE email = ?").run(
 			email,
 		);
@@ -142,7 +148,71 @@ function authVerifyCode(db: Db, args: { email: string; code: string }) {
 	}
 
 	db.prepare("DELETE FROM email_verifications WHERE email = ?").run(email);
-	return createOrReuseUser(db, email, pending.name);
+	return { name: pending.name };
+}
+
+async function authRequestCode(db: Db, args: { email: string; name: string }) {
+	const email = normalizeEmail(args.email);
+	if (!args.name || !args.name.trim()) {
+		throw new Error("Name is required");
+	}
+	return await sendCode(db, email, args.name.trim(), "verification");
+}
+
+function authSignup(db: Db, args: { email: string; code: string; password: string }) {
+	const email = normalizeEmail(args.email);
+	const password = validatePassword(args.password);
+	const pending = verifyAndConsumeCode(db, email, args.code);
+
+	const existing = db.prepare("SELECT id AS _id FROM users WHERE email = ?").get(email) as
+		| { _id: string }
+		| undefined;
+	if (existing) throw new Error("An account already exists for this email. Sign in instead.");
+
+	const id = newId();
+	db.prepare(
+		"INSERT INTO users (id, email, name, passwordHash, createdAt) VALUES (?, ?, ?, ?, ?)",
+	).run(id, email, pending.name, hashPassword(password), Date.now());
+
+	return issueSession(db, { _id: id, name: pending.name });
+}
+
+function authSignin(db: Db, args: { email: string; password: string }) {
+	const email = normalizeEmail(args.email);
+	const user = db
+		.prepare("SELECT id AS _id, name, passwordHash FROM users WHERE email = ?")
+		.get(email) as { _id: string; name: string; passwordHash: string | null } | undefined;
+
+	if (!user || !user.passwordHash) throw new Error("No account found for this email");
+	if (!verifyPassword(args.password, user.passwordHash)) throw new Error("Incorrect password");
+
+	return issueSession(db, { _id: user._id, name: user.name });
+}
+
+async function authForgotPassword(db: Db, args: { email: string }) {
+	const email = normalizeEmail(args.email);
+	const user = db.prepare("SELECT id AS _id, name FROM users WHERE email = ?").get(email) as
+		| { _id: string; name: string }
+		| undefined;
+	if (!user) throw new Error("No account found for this email");
+	return await sendCode(db, email, user.name, "reset");
+}
+
+function authResetPassword(db: Db, args: { email: string; code: string; password: string }) {
+	const email = normalizeEmail(args.email);
+	const password = validatePassword(args.password);
+	verifyAndConsumeCode(db, email, args.code);
+
+	const user = db.prepare("SELECT id AS _id, name FROM users WHERE email = ?").get(email) as
+		| { _id: string; name: string }
+		| undefined;
+	if (!user) throw new Error("No account found for this email");
+
+	db.prepare("UPDATE users SET passwordHash = ? WHERE id = ?").run(
+		hashPassword(password),
+		user._id,
+	);
+	return issueSession(db, { _id: user._id, name: user.name });
 }
 
 function usersGetByToken(db: Db, args: { token: string }) {
@@ -499,7 +569,10 @@ type Handler = (db: Db, args: any) => any;
 
 const handlers: Record<string, Handler> = {
 	"auth:requestCode": authRequestCode,
-	"auth:verifyCode": authVerifyCode,
+	"auth:signup": authSignup,
+	"auth:signin": authSignin,
+	"auth:forgotPassword": authForgotPassword,
+	"auth:resetPassword": authResetPassword,
 	"users:getByToken": usersGetByToken,
 	"topics:getBySlug": topicsGetBySlug,
 	"topics:getAll": topicsGetAll,

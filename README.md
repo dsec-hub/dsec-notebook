@@ -11,7 +11,7 @@ A centralised resource hub for Deakin University students studying **SIT** (IT, 
 - 💬 **Comments** — discuss notes directly.
 - 👍 **Voting** — upvote or downvote notes and questions.
 - 🔍 **Search** — find notes by title or content.
-- 🎓 **Deakin-only sign in** — only `@deakin.edu.au` email addresses can contribute.
+- 🎓 **Deakin-only accounts** — only `@deakin.edu.au` email addresses can contribute. Create an account with a password after verifying your email, then sign in with email and password.
 - 🗂️ **Units & topics** — browse content by Deakin unit code (e.g. `SIT102`, `SIT192`) or topic (e.g. Algorithms, Mathematics).
 - 💾 **Persistent storage** — all data is stored in a local SQLite database.
 
@@ -118,7 +118,7 @@ src/
 - The frontend calls a single JSON API endpoint (`POST /api`) with a function name and arguments.
 - The server dispatches those calls to handlers in `src/lib/server/api.ts`, backed by SQLite.
 - On first run, the database is created automatically and seeded with common Deakin SIT/Math units and CS/maths topics.
-- Authentication is email-verified: signing in with a `@deakin.edu.au` address sends a 6-digit code via Resend, which the user must enter to prove they own the inbox. Verified users are created or reused and given a session token stored in `localStorage`.
+- Authentication is email-verified: to create an account you sign in with a `@deakin.edu.au` address, a 6-digit code is sent via Resend, and after entering the code you set a password. Once created, you sign in with just your email and password. A "forgot password" flow sends a reset code to your Deakin address so you can set a new password. Passwords are stored as salted scrypt hashes, and sessions are stored as tokens in `localStorage`.
 
 ## Data model
 

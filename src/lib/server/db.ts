@@ -15,6 +15,7 @@ function createSchema(database: DatabaseSync) {
       email TEXT NOT NULL UNIQUE,
       name TEXT NOT NULL,
       sessionToken TEXT,
+      passwordHash TEXT,
       createdAt INTEGER NOT NULL
     );
 
@@ -204,6 +205,13 @@ const SEED_UNITS = [
 	{ code: "MIS798", name: "Business Process Management" },
 ];
 
+function migrate(database: DatabaseSync) {
+	const columns = database.prepare("PRAGMA table_info(users)").all() as { name: string }[];
+	if (!columns.some((c) => c.name === "passwordHash")) {
+		database.exec("ALTER TABLE users ADD COLUMN passwordHash TEXT");
+	}
+}
+
 function seed(database: DatabaseSync) {
 	const existing = database.prepare("SELECT COUNT(*) AS c FROM topics").get() as { c: number };
 	if (existing.c > 0) return;
@@ -233,6 +241,7 @@ export function getDb(): DatabaseSync {
 		mkdirSync(dirname(DB_PATH), { recursive: true });
 		db = new DatabaseSync(DB_PATH);
 		createSchema(db);
+		migrate(db);
 		seed(db);
 	}
 	return db;
