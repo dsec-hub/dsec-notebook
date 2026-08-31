@@ -5,9 +5,9 @@ async function call(name: string, args: Record<string, any> = {}): Promise<any> 
 		body: JSON.stringify({ fn: name, args }),
 	});
 
-	const data = await res.json();
-	if (!data.ok) {
-		throw new Error(data.error ?? "Request failed");
+	const data = await res.json().catch(() => null);
+	if (!res.ok || !data?.ok) {
+		throw new Error(data?.error ?? `Request failed (${res.status})`);
 	}
 	return data.result;
 }

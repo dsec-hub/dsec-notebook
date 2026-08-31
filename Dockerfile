@@ -14,6 +14,9 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
+# Keep only production dependencies so they can be copied into the runtime image.
+RUN npm prune --omit=dev
+
 # ---- Runtime stage ----
 FROM node:24-alpine AS runtime
 
@@ -25,6 +28,8 @@ ENV NODE_ENV=production \
     DATABASE_PATH=data/dsec.db
 
 COPY --from=build /app/build ./build
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/node_modules ./node_modules
 
 RUN mkdir -p data && chown -R node:node /app
 USER node

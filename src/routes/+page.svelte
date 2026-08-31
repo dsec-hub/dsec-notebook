@@ -5,10 +5,16 @@
 
 	let units: UnitDoc[] = $state([]);
 	let loading = $state(true);
+	let error = $state("");
 
 	onMount(async () => {
-		units = (await query("units:getAll")) as UnitDoc[];
-		loading = false;
+		try {
+			units = (await query("units:getAll")) as UnitDoc[];
+		} catch (err: any) {
+			error = err.message ?? "Failed to load units";
+		} finally {
+			loading = false;
+		}
 	});
 </script>
 
@@ -38,6 +44,8 @@
 		<p class="kicker mb-6">Units</p>
 		{#if loading}
 			<p class="kicker">Loading</p>
+		{:else if error}
+			<p class="kicker">{error}</p>
 		{:else}
 			<div class="grid grid-cols-1 sm:grid-cols-2">
 				{#each units as unit}
