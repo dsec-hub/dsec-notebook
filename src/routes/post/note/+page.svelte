@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { query, mutation } from "$lib/api";
-	import { isAuthenticated, getToken } from "$lib/stores/auth";
+	import { isAuthenticated, getToken, initAuth } from "$lib/stores/auth";
 	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { get } from "svelte/store";
@@ -19,8 +19,9 @@
 	let success = $state("");
 
 	onMount(async () => {
+		await initAuth();
 		if (!get(isAuthenticated)) {
-			goto("/auth/login");
+			goto("/auth/login", { replaceState: true });
 			return;
 		}
 		const [t, u] = await Promise.all([query("topics:getAll"), query("units:getAll")]);

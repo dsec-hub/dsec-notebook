@@ -7,22 +7,28 @@ export const isAuthenticated = writable(false);
 
 const STORAGE_KEY = "dsec_session";
 
-export async function initAuth() {
-	const stored = localStorage.getItem(STORAGE_KEY);
-	if (stored) {
-		try {
-			const { token } = JSON.parse(stored);
-			const user = await query("users:getByToken", { token });
-			if (user) {
-				currentUser.set(user as UserDoc);
-				isAuthenticated.set(true);
-			} else {
+let initPromise: Promise<void> | null = null;
+
+export function initAuth(): Promise<void> {
+	if (initPromise) return initPromise;
+	initPromise = (async () => {
+		const stored = localStorage.getItem(STORAGE_KEY);
+		if (stored) {
+			try {
+				const { token } = JSON.parse(stored);
+				const user = await query("users:getByToken", { token });
+				if (user) {
+					currentUser.set(user as UserDoc);
+					isAuthenticated.set(true);
+				} else {
+					localStorage.removeItem(STORAGE_KEY);
+				}
+			} catch {
 				localStorage.removeItem(STORAGE_KEY);
 			}
-		} catch {
-			localStorage.removeItem(STORAGE_KEY);
 		}
-	}
+	})();
+	return initPromise;
 }
 
 function setSession(result: { userId: string; token: string; name: string }, email: string) {
