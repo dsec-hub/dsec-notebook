@@ -9,12 +9,21 @@
 	onMount(() => {
 		initAuth();
 	});
+
+	onMount(async () => {
+		const { registerSW } = await import("virtual:pwa-register");
+		registerSW({
+			immediate: true,
+			onRegisterError(error) {
+				console.error("Service worker registration failed", error);
+			},
+		});
+	});
 </script>
 
 <svelte:head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<link rel="icon" href="/favicon.svg" />
 </svelte:head>
 
 <div class="flex min-h-screen flex-col bg-white">

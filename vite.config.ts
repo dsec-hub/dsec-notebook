@@ -3,6 +3,7 @@ import { defineConfig } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
 import adapter from "@sveltejs/adapter-node";
 import { sveltekit } from "@sveltejs/kit/vite";
+import { SvelteKitPWA } from "@vite-pwa/sveltekit";
 
 export default defineConfig({
 	plugins: [
@@ -16,6 +17,31 @@ export default defineConfig({
 
 			// adapter-node is used because the app persists data to a local SQLite file on the server.
 			adapter: adapter(),
+		}),
+		SvelteKitPWA({
+			registerType: "autoUpdate",
+			devOptions: {
+				enabled: true,
+				type: "module",
+			},
+			manifest: {
+				name: "DSEC Notebook",
+				short_name: "Notebook",
+				description:
+					"A resource hub for Deakin University students: shared study notes, questions and answers for SIT and Mathematics units.",
+				start_url: "/",
+				scope: "/",
+				display: "standalone",
+				background_color: "#ffffff",
+				theme_color: "#ffffff",
+				lang: "en",
+			},
+			pwaAssets: {
+				image: "static/dsec-logo.webp",
+				preset: "minimal-2023",
+				includeHtmlHeadLinks: false,
+				injectThemeColor: false,
+			},
 		}),
 	],
 	test: {

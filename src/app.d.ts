@@ -1,3 +1,5 @@
+/// <reference types="vite-plugin-pwa/client" />
+
 export {};
 
 declare global {
