@@ -14,6 +14,9 @@ jobs:
 
             - name: Build and start containers
               run: docker compose up -d --build --remove-orphans
+              env:
+                  RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+                  RESEND_FROM: ${{ secrets.RESEND_FROM }}
 
             - name: Prune dangling images
               run: docker image prune -f

@@ -1,8 +1,8 @@
 import { Resend } from "resend";
-import { RESEND_API_KEY, RESEND_FROM } from "$env/static/private";
+import { env } from "$env/dynamic/private";
 
-const API_KEY = RESEND_API_KEY;
-const FROM = RESEND_FROM;
+const API_KEY = env.RESEND_API_KEY;
+const FROM = env.RESEND_FROM;
 
 async function send(email: string, subject: string, text: string): Promise<void> {
 	if (!API_KEY) {

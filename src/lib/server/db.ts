@@ -2,9 +2,9 @@ import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
-import { DATABASE_PATH } from "$env/static/private";
+import { env } from "$env/dynamic/private";
 
-const DB_PATH = resolve(DATABASE_PATH ?? "data/dsec.db");
+const DB_PATH = resolve(env.DATABASE_PATH ?? "data/dsec.db");
 
 let db: DatabaseSync | null = null;
 
