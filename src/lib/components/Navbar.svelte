@@ -1,21 +1,27 @@
 <script lang="ts">
-	import { isAuthenticated, initAuth, logout } from "$lib/stores/auth";
+	import { isAuthenticated, initAuth, logout, currentUser } from "$lib/stores/auth";
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 
 	let mobileMenuOpen = $state(false);
 	let auth = $state(false);
+	let admin = $state(false);
 
 	onMount(() => {
 		initAuth();
-		const unsub = isAuthenticated.subscribe((v) => (auth = v));
-		return () => unsub();
+		const unsubAuth = isAuthenticated.subscribe((v) => (auth = v));
+		const unsubUser = currentUser.subscribe((u) => (admin = u?.role === "admin"));
+		return () => {
+			unsubAuth();
+			unsubUser();
+		};
 	});
 
 	const path = $derived(page.url.pathname);
 	const onNotes = $derived(path === "/notes" || path.startsWith("/notes/"));
 	const onQuestions = $derived(path === "/questions" || path.startsWith("/questions/"));
+	const onAdmin = $derived(path === "/admin" || path.startsWith("/admin/"));
 </script>
 
 <header class="border-rule border-b bg-white">
@@ -27,6 +33,9 @@
 			<a href="/questions" class="nav-link {onQuestions ? 'nav-link-active' : ''}"
 				>Questions</a
 			>
+			{#if admin}
+				<a href="/admin" class="nav-link {onAdmin ? 'nav-link-active' : ''}">Admin</a>
+			{/if}
 			{#if auth}
 				<button
 					type="button"
@@ -68,6 +77,11 @@
 			<a href="/questions" class="nav-link block" onclick={() => (mobileMenuOpen = false)}
 				>Questions</a
 			>
+			{#if admin}
+				<a href="/admin" class="nav-link block" onclick={() => (mobileMenuOpen = false)}
+					>Admin</a
+				>
+			{/if}
 			{#if auth}
 				<button
 					type="button"

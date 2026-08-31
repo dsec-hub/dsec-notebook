@@ -16,6 +16,7 @@ function createSchema(database: DatabaseSync) {
       name TEXT NOT NULL,
       sessionToken TEXT,
       passwordHash TEXT,
+      role TEXT NOT NULL DEFAULT 'user',
       createdAt INTEGER NOT NULL
     );
 
@@ -209,6 +210,9 @@ function migrate(database: DatabaseSync) {
 	const columns = database.prepare("PRAGMA table_info(users)").all() as { name: string }[];
 	if (!columns.some((c) => c.name === "passwordHash")) {
 		database.exec("ALTER TABLE users ADD COLUMN passwordHash TEXT");
+	}
+	if (!columns.some((c) => c.name === "role")) {
+		database.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'");
 	}
 }
 

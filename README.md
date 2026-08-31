@@ -12,6 +12,7 @@ A centralised resource hub for Deakin University students studying **SIT** (IT, 
 - 👍 **Voting** — upvote or downvote notes and questions.
 - 🔍 **Search** — find notes by title or content.
 - 🎓 **Deakin-only accounts** — only `@deakin.edu.au` email addresses can contribute. Create an account with a password after verifying your email, then sign in with email and password.
+- 🛠️ **Admin dashboard** — manage units, accounts, and notes, plus weekly posting statistics. The first person to open the dashboard verifies their email to become the admin.
 - 🗂️ **Units & topics** — browse content by Deakin unit code (e.g. `SIT102`, `SIT192`) or topic (e.g. Algorithms, Mathematics).
 - 💾 **Persistent storage** — all data is stored in a local SQLite database.
 
@@ -109,6 +110,7 @@ src/
 │   ├── units/[code]/   # Unit pages
 │   ├── search/         # Search page
 │   ├── auth/login/     # Sign in page
+│   ├── admin/          # Admin dashboard
 │   └── api/+server.ts  # JSON API endpoint
 └── app.html
 ```
@@ -124,7 +126,7 @@ src/
 
 The SQLite database contains the following tables:
 
-- `users` — Deakin email accounts
+- `users` — Deakin email accounts (each has a `role`: `user` or `admin`)
 - `units` — Deakin unit codes and names
 - `topics` — CS and maths topics
 - `notes` — shared study notes

@@ -9,6 +9,7 @@ export type UserDoc = Doc<"users"> & {
 	email: string;
 	name: string;
 	sessionToken?: string;
+	role: "user" | "admin";
 };
 
 export type TopicDoc = Doc<"topics"> & {

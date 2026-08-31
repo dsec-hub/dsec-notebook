@@ -71,10 +71,16 @@ function normalizeEmail(email: string): string {
 function requireAuth(db: Db, token: string): Record<string, any> {
 	const user = db
 		.prepare(
-			"SELECT id AS _id, email, name, sessionToken, createdAt AS _creationTime FROM users WHERE sessionToken = ?",
+			"SELECT id AS _id, email, name, sessionToken, role, createdAt AS _creationTime FROM users WHERE sessionToken = ?",
 		)
 		.get(token) as Record<string, any> | undefined;
 	if (!user) throw new Error("Not authenticated");
+	return user;
+}
+
+function requireAdmin(db: Db, token: string): Record<string, any> {
+	const user = requireAuth(db, token);
+	if (user.role !== "admin") throw new Error("Not authorized");
 	return user;
 }
 
@@ -84,10 +90,10 @@ function mapQuestion(row: Record<string, any>): Record<string, any> {
 
 // ---- users ----
 
-function issueSession(db: Db, user: { _id: string; name: string }) {
+function issueSession(db: Db, user: { _id: string; name: string; role?: string }) {
 	const token = generateToken();
 	db.prepare("UPDATE users SET sessionToken = ? WHERE id = ?").run(token, user._id);
-	return { userId: user._id, token, name: user.name };
+	return { userId: user._id, token, name: user.name, role: user.role ?? "user" };
 }
 
 async function sendCode(db: Db, email: string, name: string, kind: "verification" | "reset") {
@@ -171,22 +177,27 @@ function authSignup(db: Db, args: { email: string; code: string; password: strin
 
 	const id = newId();
 	db.prepare(
-		"INSERT INTO users (id, email, name, passwordHash, createdAt) VALUES (?, ?, ?, ?, ?)",
+		"INSERT INTO users (id, email, name, passwordHash, role, createdAt) VALUES (?, ?, ?, ?, 'user', ?)",
 	).run(id, email, pending.name, hashPassword(password), Date.now());
 
-	return issueSession(db, { _id: id, name: pending.name });
+	return issueSession(db, { _id: id, name: pending.name, role: "user" });
 }
 
 function authSignin(db: Db, args: { email: string; password: string }) {
 	const email = normalizeEmail(args.email);
 	const user = db
-		.prepare("SELECT id AS _id, name, passwordHash FROM users WHERE email = ?")
-		.get(email) as { _id: string; name: string; passwordHash: string | null } | undefined;
+		.prepare("SELECT id AS _id, name, role, passwordHash FROM users WHERE email = ?")
+		.get(email) as
+		| { _id: string; name: string; role: string; passwordHash: string | null }
+		| undefined;
 
-	if (!user || !user.passwordHash) throw new Error("No account found for this email");
+	if (!user) throw new Error("No account found for this email");
+	if (!user.passwordHash) {
+		throw new Error("This account has no password set. Use Forgot password to create one.");
+	}
 	if (!verifyPassword(args.password, user.passwordHash)) throw new Error("Incorrect password");
 
-	return issueSession(db, { _id: user._id, name: user.name });
+	return issueSession(db, { _id: user._id, name: user.name, role: user.role });
 }
 
 async function authForgotPassword(db: Db, args: { email: string }) {
@@ -203,23 +214,23 @@ function authResetPassword(db: Db, args: { email: string; code: string; password
 	const password = validatePassword(args.password);
 	verifyAndConsumeCode(db, email, args.code);
 
-	const user = db.prepare("SELECT id AS _id, name FROM users WHERE email = ?").get(email) as
-		| { _id: string; name: string }
-		| undefined;
+	const user = db
+		.prepare("SELECT id AS _id, name, role FROM users WHERE email = ?")
+		.get(email) as { _id: string; name: string; role: string } | undefined;
 	if (!user) throw new Error("No account found for this email");
 
 	db.prepare("UPDATE users SET passwordHash = ? WHERE id = ?").run(
 		hashPassword(password),
 		user._id,
 	);
-	return issueSession(db, { _id: user._id, name: user.name });
+	return issueSession(db, { _id: user._id, name: user.name, role: user.role });
 }
 
 function usersGetByToken(db: Db, args: { token: string }) {
 	return (
 		db
 			.prepare(
-				"SELECT id AS _id, email, name, sessionToken, createdAt AS _creationTime FROM users WHERE sessionToken = ?",
+				"SELECT id AS _id, email, name, sessionToken, role, createdAt AS _creationTime FROM users WHERE sessionToken = ?",
 			)
 			.get(args.token) ?? null
 	);
@@ -563,6 +574,314 @@ function getQuestionWithDetails(db: Db, args: { id: string }) {
 	return { ...mapQuestion(question), topic, unit, answers };
 }
 
+// ---- admin ----
+
+function adminGetState(db: Db, args: { token?: string }) {
+	const admin = db.prepare("SELECT id AS _id FROM users WHERE role = 'admin' LIMIT 1").get();
+	let currentUser: Record<string, any> | null = null;
+	let isAdmin = false;
+
+	if (args.token) {
+		const user = db
+			.prepare(
+				"SELECT id AS _id, email, name, sessionToken, role, createdAt AS _creationTime FROM users WHERE sessionToken = ?",
+			)
+			.get(args.token) as Record<string, any> | undefined;
+		if (user) {
+			currentUser = user;
+			isAdmin = user.role === "admin";
+		}
+	}
+
+	return { hasAdmin: !!admin, currentUser, isAdmin };
+}
+
+function ensureNoAdmin(db: Db) {
+	const admin = db.prepare("SELECT id AS _id FROM users WHERE role = 'admin' LIMIT 1").get();
+	if (admin) throw new Error("An admin already exists");
+}
+
+async function adminRequestCode(db: Db, args: { email: string; name?: string }) {
+	ensureNoAdmin(db);
+	const email = normalizeEmail(args.email);
+	const existing = db.prepare("SELECT name FROM users WHERE email = ?").get(email) as
+		| { name: string }
+		| undefined;
+	const name = (existing?.name ?? args.name ?? "").trim();
+	if (!name) throw new Error("Name is required");
+	return await sendCode(db, email, name, "verification");
+}
+
+function adminCompleteSetup(db: Db, args: { email: string; code: string }) {
+	ensureNoAdmin(db);
+	const email = normalizeEmail(args.email);
+	const pending = verifyAndConsumeCode(db, email, args.code);
+
+	const existing = db.prepare("SELECT id AS _id, name FROM users WHERE email = ?").get(email) as
+		| { _id: string; name: string }
+		| undefined;
+
+	if (existing) {
+		db.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(existing._id);
+		return issueSession(db, { _id: existing._id, name: existing.name, role: "admin" });
+	}
+
+	const id = newId();
+	db.prepare(
+		"INSERT INTO users (id, email, name, role, createdAt) VALUES (?, ?, ?, 'admin', ?)",
+	).run(id, email, pending.name, Date.now());
+	return issueSession(db, { _id: id, name: pending.name, role: "admin" });
+}
+
+function adminUnitsSave(
+	db: Db,
+	args: { token: string; id?: string; code: string; name: string; description?: string },
+) {
+	requireAdmin(db, args.token);
+	const code = (args.code ?? "").trim().toUpperCase();
+	const name = (args.name ?? "").trim();
+	if (!code || !name) throw new Error("Code and name are required");
+
+	const duplicate = db
+		.prepare("SELECT id AS _id FROM units WHERE code = ? AND id != ?")
+		.get(code, args.id ?? "") as { _id: string } | undefined;
+	if (duplicate) throw new Error("A unit with this code already exists");
+
+	const description = args.description?.trim() || null;
+	if (args.id) {
+		const existing = db.prepare("SELECT id AS _id FROM units WHERE id = ?").get(args.id);
+		if (!existing) throw new Error("Unit not found");
+		db.prepare("UPDATE units SET code = ?, name = ?, description = ? WHERE id = ?").run(
+			code,
+			name,
+			description,
+			args.id,
+		);
+		return args.id;
+	}
+
+	const id = newId();
+	db.prepare("INSERT INTO units (id, code, name, description) VALUES (?, ?, ?, ?)").run(
+		id,
+		code,
+		name,
+		description,
+	);
+	return id;
+}
+
+function adminUnitsDelete(db: Db, args: { token: string; id: string }) {
+	requireAdmin(db, args.token);
+	const refs = db
+		.prepare(
+			"SELECT (SELECT COUNT(*) FROM notes WHERE unitId = ?) + (SELECT COUNT(*) FROM questions WHERE unitId = ?) AS c",
+		)
+		.get(args.id, args.id) as { c: number };
+	if (refs.c > 0) throw new Error("Cannot delete a unit that has notes or questions");
+	db.prepare("DELETE FROM units WHERE id = ?").run(args.id);
+}
+
+function adminUsersList(db: Db, args: { token: string }) {
+	requireAdmin(db, args.token);
+	return db
+		.prepare(
+			`SELECT
+        u.id AS _id,
+        u.email,
+        u.name,
+        u.role,
+        u.createdAt AS _creationTime,
+        (SELECT COUNT(*) FROM notes n WHERE n.authorId = u.id) AS noteCount,
+        (SELECT COUNT(*) FROM questions q WHERE q.authorId = u.id) AS questionCount
+      FROM users u
+      ORDER BY u.createdAt ASC`,
+		)
+		.all();
+}
+
+function adminUsersUpdate(
+	db: Db,
+	args: { token: string; id: string; email: string; name: string; role: string },
+) {
+	requireAdmin(db, args.token);
+	const user = db.prepare("SELECT id AS _id, role FROM users WHERE id = ?").get(args.id) as
+		| { _id: string; role: string }
+		| undefined;
+	if (!user) throw new Error("User not found");
+
+	const email = normalizeEmail(args.email);
+	const name = (args.name ?? "").trim();
+	if (!name) throw new Error("Name is required");
+
+	const duplicate = db
+		.prepare("SELECT id AS _id FROM users WHERE email = ? AND id != ?")
+		.get(email, args.id) as { _id: string } | undefined;
+	if (duplicate) throw new Error("Email is already in use");
+
+	const role = args.role === "admin" ? "admin" : "user";
+	if (user.role === "admin" && role !== "admin") {
+		const adminCount = db
+			.prepare("SELECT COUNT(*) AS c FROM users WHERE role = 'admin'")
+			.get() as { c: number };
+		if (adminCount.c <= 1) throw new Error("Cannot demote the last admin");
+	}
+
+	db.prepare("UPDATE users SET email = ?, name = ?, role = ? WHERE id = ?").run(
+		email,
+		name,
+		role,
+		args.id,
+	);
+}
+
+function adminUsersDelete(db: Db, args: { token: string; id: string }) {
+	const admin = requireAdmin(db, args.token);
+	const user = db
+		.prepare("SELECT id AS _id, role, email FROM users WHERE id = ?")
+		.get(args.id) as { _id: string; role: string; email: string } | undefined;
+	if (!user) throw new Error("User not found");
+
+	if (user._id === admin._id) throw new Error("You cannot delete your own account");
+	if (user.role === "admin") {
+		const adminCount = db
+			.prepare("SELECT COUNT(*) AS c FROM users WHERE role = 'admin'")
+			.get() as { c: number };
+		if (adminCount.c <= 1) throw new Error("Cannot delete the last admin");
+	}
+
+	const noteIds = (
+		db.prepare("SELECT id FROM notes WHERE authorId = ?").all(args.id) as { id: string }[]
+	).map((r) => r.id);
+	const questionIds = (
+		db.prepare("SELECT id FROM questions WHERE authorId = ?").all(args.id) as {
+			id: string;
+		}[]
+	).map((r) => r.id);
+
+	db.exec("BEGIN");
+	try {
+		db.prepare("DELETE FROM votes WHERE userId = ?").run(args.id);
+		for (const id of noteIds) {
+			db.prepare("DELETE FROM votes WHERE targetType = 'note' AND targetId = ?").run(id);
+			db.prepare("DELETE FROM comments WHERE parentId = ?").run(id);
+		}
+		for (const id of questionIds) {
+			db.prepare("DELETE FROM votes WHERE targetType = 'question' AND targetId = ?").run(id);
+			db.prepare("DELETE FROM comments WHERE questionId = ?").run(id);
+		}
+		db.prepare("DELETE FROM comments WHERE authorId = ?").run(args.id);
+		db.prepare("DELETE FROM notes WHERE authorId = ?").run(args.id);
+		db.prepare("DELETE FROM questions WHERE authorId = ?").run(args.id);
+		db.prepare("DELETE FROM email_verifications WHERE email = ?").run(user.email);
+		db.prepare("DELETE FROM users WHERE id = ?").run(args.id);
+		db.exec("COMMIT");
+	} catch (err) {
+		db.exec("ROLLBACK");
+		throw err;
+	}
+}
+
+function adminNotesList(db: Db, args: { token: string }) {
+	requireAdmin(db, args.token);
+	return db
+		.prepare(
+			`SELECT
+        n.id AS _id,
+        n.title,
+        n.content,
+        n.topicId,
+        n.unitId,
+        n.authorId,
+        n.authorName,
+        n.createdAt,
+        n.updatedAt,
+        n.voteCount,
+        n.commentCount,
+        u.code AS unitCode
+      FROM notes n
+      LEFT JOIN units u ON u.id = n.unitId
+      ORDER BY n.createdAt DESC`,
+		)
+		.all();
+}
+
+function adminNotesUpdate(
+	db: Db,
+	args: { token: string; id: string; title: string; content: string },
+) {
+	requireAdmin(db, args.token);
+	const title = (args.title ?? "").trim();
+	const content = (args.content ?? "").trim();
+	if (!title || !content) throw new Error("Title and content are required");
+	db.prepare("UPDATE notes SET title = ?, content = ?, updatedAt = ? WHERE id = ?").run(
+		title,
+		content,
+		Date.now(),
+		args.id,
+	);
+}
+
+function adminNotesDelete(db: Db, args: { token: string; id: string }) {
+	requireAdmin(db, args.token);
+	db.prepare("DELETE FROM comments WHERE parentId = ?").run(args.id);
+	db.prepare("DELETE FROM votes WHERE targetType = 'note' AND targetId = ?").run(args.id);
+	db.prepare("DELETE FROM notes WHERE id = ?").run(args.id);
+}
+
+function startOfUtcWeek(ts: number): number {
+	const date = new Date(ts);
+	const day = date.getUTCDay();
+	const diffToMonday = (day + 6) % 7;
+	date.setUTCHours(0, 0, 0, 0);
+	date.setUTCDate(date.getUTCDate() - diffToMonday);
+	return date.getTime();
+}
+
+function adminStats(db: Db, args: { token: string; weeks?: number }) {
+	requireAdmin(db, args.token);
+	const weekCount = Math.max(1, Math.min(52, args.weeks ?? 8));
+	const weekMs = 7 * 24 * 60 * 60 * 1000;
+	const now = Date.now();
+	const currentWeekStart = startOfUtcWeek(now);
+	const firstWeekStart = currentWeekStart - (weekCount - 1) * weekMs;
+
+	const notes = db
+		.prepare("SELECT createdAt FROM notes WHERE createdAt >= ?")
+		.all(firstWeekStart) as { createdAt: number }[];
+	const questions = db
+		.prepare("SELECT createdAt FROM questions WHERE createdAt >= ?")
+		.all(firstWeekStart) as { createdAt: number }[];
+
+	const buckets = new Map<number, { notes: number; questions: number }>();
+	for (let i = 0; i < weekCount; i++) {
+		buckets.set(firstWeekStart + i * weekMs, { notes: 0, questions: 0 });
+	}
+
+	for (const row of notes) {
+		const start = startOfUtcWeek(row.createdAt);
+		const bucket = buckets.get(start);
+		if (bucket) bucket.notes++;
+	}
+	for (const row of questions) {
+		const start = startOfUtcWeek(row.createdAt);
+		const bucket = buckets.get(start);
+		if (bucket) bucket.questions++;
+	}
+
+	const weeks = [...buckets.entries()]
+		.sort((a, b) => a[0] - b[0])
+		.map(([weekStart, counts]) => ({ weekStart, ...counts }));
+
+	const totals = {
+		notes: (db.prepare("SELECT COUNT(*) AS c FROM notes").get() as { c: number }).c,
+		questions: (db.prepare("SELECT COUNT(*) AS c FROM questions").get() as { c: number }).c,
+		users: (db.prepare("SELECT COUNT(*) AS c FROM users").get() as { c: number }).c,
+		units: (db.prepare("SELECT COUNT(*) AS c FROM units").get() as { c: number }).c,
+	};
+
+	return { weeks, totals };
+}
+
 // ---- dispatcher ----
 
 type Handler = (db: Db, args: any) => any;
@@ -597,6 +916,18 @@ const handlers: Record<string, Handler> = {
 	"votes:cast": votesCast,
 	"details:getNoteWithDetails": getNoteWithDetails,
 	"details:getQuestionWithDetails": getQuestionWithDetails,
+	"admin:getState": adminGetState,
+	"admin:requestCode": adminRequestCode,
+	"admin:completeSetup": adminCompleteSetup,
+	"admin:unitsSave": adminUnitsSave,
+	"admin:unitsDelete": adminUnitsDelete,
+	"admin:usersList": adminUsersList,
+	"admin:usersUpdate": adminUsersUpdate,
+	"admin:usersDelete": adminUsersDelete,
+	"admin:notesList": adminNotesList,
+	"admin:notesUpdate": adminNotesUpdate,
+	"admin:notesDelete": adminNotesDelete,
+	"admin:stats": adminStats,
 };
 
 export async function call(fn: string, args: Record<string, any> = {}): Promise<any> {

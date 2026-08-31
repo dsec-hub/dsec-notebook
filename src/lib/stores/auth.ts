@@ -31,13 +31,17 @@ export function initAuth(): Promise<void> {
 	return initPromise;
 }
 
-function setSession(result: { userId: string; token: string; name: string }, email: string) {
+function setSession(
+	result: { userId: string; token: string; name: string; role?: string },
+	email: string,
+) {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: result.token }));
 	currentUser.set({
 		_id: result.userId,
 		email: email.toLowerCase(),
 		name: result.name,
 		sessionToken: result.token,
+		role: (result.role ?? "user") as UserDoc["role"],
 		_creationTime: Date.now(),
 	} as UserDoc);
 	isAuthenticated.set(true);
@@ -64,6 +68,15 @@ export async function forgotPassword(email: string) {
 
 export async function resetPassword(email: string, code: string, password: string) {
 	const result = await mutation("auth:resetPassword", { email, code, password });
+	return setSession(result, email);
+}
+
+export async function adminRequestCode(email: string, name: string) {
+	return await mutation("admin:requestCode", { email, name });
+}
+
+export async function adminCompleteSetup(email: string, code: string) {
+	const result = await mutation("admin:completeSetup", { email, code });
 	return setSession(result, email);
 }
 
