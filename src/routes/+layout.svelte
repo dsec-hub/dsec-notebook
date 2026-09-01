@@ -26,14 +26,14 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 </svelte:head>
 
-<div class="flex min-h-screen flex-col bg-white">
+<div class="bg-surface flex min-h-screen flex-col">
 	<Navbar />
 	<main class="flex-1">
 		{@render children()}
 	</main>
 	<footer class="border-rule mt-16 border-t">
 		<div class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-			<p class="kicker">Notebook — written by students, for students.</p>
+			<p class="kicker">DSEC Notebook</p>
 			<p class="text-faint mt-2 text-xs">
 				DSEC Notebook is a community resource for Deakin University students. Not affiliated
 				with Deakin University.

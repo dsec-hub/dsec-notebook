@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { isAuthenticated, initAuth, logout, currentUser } from "$lib/stores/auth";
+	import { theme, toggleTheme } from "$lib/stores/theme";
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
@@ -8,6 +9,7 @@
 	let auth = $state(false);
 	let admin = $state(false);
 	let searchQuery = $state("");
+	let isDark = $state(false);
 
 	function submitSearch(e: SubmitEvent) {
 		e.preventDefault();
@@ -22,9 +24,11 @@
 		initAuth();
 		const unsubAuth = isAuthenticated.subscribe((v) => (auth = v));
 		const unsubUser = currentUser.subscribe((u) => (admin = u?.role === "admin"));
+		const unsubTheme = theme.subscribe((t) => (isDark = t === "dark"));
 		return () => {
 			unsubAuth();
 			unsubUser();
+			unsubTheme();
 		};
 	});
 
@@ -34,7 +38,7 @@
 	const onAdmin = $derived(path === "/admin" || path.startsWith("/admin/"));
 </script>
 
-<header class="border-rule border-b bg-white">
+<header class="border-rule bg-surface border-b">
 	<div class="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
 		<a href="/" class="text-ink font-serif text-[1.65rem] leading-none">Notebook</a>
 
@@ -60,13 +64,50 @@
 			{:else}
 				<a href="/auth/login" class="nav-link">Sign in</a>
 			{/if}
+			<button
+				type="button"
+				class="text-muted hover:text-ink p-1"
+				aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+				onclick={toggleTheme}
+			>
+				{#if isDark}
+					<svg
+						class="h-5 w-5"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						aria-hidden="true"
+					>
+						<circle cx="12" cy="12" r="4" />
+						<path
+							stroke-linecap="square"
+							d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+						/>
+					</svg>
+				{:else}
+					<svg
+						class="h-5 w-5"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						aria-hidden="true"
+					>
+						<path
+							stroke-linecap="square"
+							d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+						/>
+					</svg>
+				{/if}
+			</button>
 			<form onsubmit={submitSearch}>
 				<input
 					type="search"
 					bind:value={searchQuery}
 					placeholder="Search"
 					aria-label="Search notes and questions"
-					class="border-rule text-ink placeholder:text-faint focus:border-primary w-40 rounded-none border bg-white px-2.5 py-1.5 text-[11px] tracking-wide transition-colors outline-none"
+					class="border-rule text-ink placeholder:text-faint focus:border-primary bg-surface w-40 rounded-none border px-2.5 py-1.5 text-[11px] tracking-wide transition-colors outline-none"
 				/>
 			</form>
 		</nav>
@@ -96,7 +137,7 @@
 					bind:value={searchQuery}
 					placeholder="Search"
 					aria-label="Search notes and questions"
-					class="border-rule text-ink placeholder:text-faint focus:border-primary w-full rounded-none border bg-white px-3 py-2 text-sm tracking-wide transition-colors outline-none"
+					class="border-rule text-ink placeholder:text-faint focus:border-primary bg-surface w-full rounded-none border px-3 py-2 text-sm tracking-wide transition-colors outline-none"
 				/>
 			</form>
 			<a href="/notes" class="nav-link block" onclick={() => (mobileMenuOpen = false)}
@@ -129,6 +170,43 @@
 					onclick={() => (mobileMenuOpen = false)}>Sign in</a
 				>
 			{/if}
+			<button
+				type="button"
+				class="text-muted hover:text-ink flex items-center gap-2 p-1"
+				aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+				onclick={toggleTheme}
+			>
+				{#if isDark}
+					<svg
+						class="h-5 w-5"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						aria-hidden="true"
+					>
+						<circle cx="12" cy="12" r="4" />
+						<path
+							stroke-linecap="square"
+							d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+						/>
+					</svg>
+				{:else}
+					<svg
+						class="h-5 w-5"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						aria-hidden="true"
+					>
+						<path
+							stroke-linecap="square"
+							d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+						/>
+					</svg>
+				{/if}
+			</button>
 		</nav>
 	{/if}
 </header>
