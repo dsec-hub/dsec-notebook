@@ -4,6 +4,7 @@
 	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { get } from "svelte/store";
+	import MarkdownEditor from "$lib/components/MarkdownEditor.svelte";
 	import type { TopicDoc, UnitDoc } from "$lib/types";
 
 	let topics: TopicDoc[] = $state([]);
@@ -121,14 +122,12 @@
 		</div>
 
 		<div>
-			<label for="content" class="kicker mb-2 block">Content</label>
-			<textarea
-				id="content"
-				bind:value={content}
-				rows={10}
+			<MarkdownEditor
+				bind:content
+				label="Content"
 				placeholder="Write your notes here..."
-				class="field resize-y"
-				required></textarea>
+				rows={10}
+			/>
 		</div>
 
 		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">

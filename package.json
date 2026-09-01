@@ -16,6 +16,7 @@
 		"fmt:check": "oxfmt --check"
 	},
 	"dependencies": {
+		"markdown-it": "^15.0.1",
 		"resend": "^6.25.0"
 	},
 	"devDependencies": {

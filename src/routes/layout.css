@@ -119,3 +119,140 @@ button {
 .nav-link-active {
 	@apply text-ink;
 }
+
+.editor-tool {
+	@apply text-ink hover:border-primary hover:text-primary bg-surface inline-flex h-8 min-w-8 items-center justify-center rounded-sm border border-transparent px-1.5 font-sans text-xs font-medium transition-colors;
+}
+
+.markdown {
+	font-size: inherit;
+	line-height: inherit;
+	color: inherit;
+	word-break: break-word;
+}
+
+.markdown > :first-child {
+	margin-top: 0;
+}
+
+.markdown > :last-child {
+	margin-bottom: 0;
+}
+
+.markdown p {
+	margin: 0.75em 0;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+	font-family: var(--font-serif);
+	font-weight: 500;
+	line-height: 1.25;
+	margin: 1.25em 0 0.5em;
+}
+
+.markdown h1 {
+	font-size: 1.5em;
+}
+
+.markdown h2 {
+	font-size: 1.25em;
+}
+
+.markdown h3 {
+	font-size: 1.1em;
+}
+
+.markdown h4 {
+	font-size: 1em;
+}
+
+.markdown ul,
+.markdown ol {
+	margin: 0.75em 0;
+	padding-left: 1.5em;
+}
+
+.markdown ul {
+	list-style: disc;
+}
+
+.markdown ol {
+	list-style: decimal;
+}
+
+.markdown li {
+	margin: 0.25em 0;
+}
+
+.markdown a {
+	color: var(--color-secondary);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.markdown a:hover {
+	color: var(--color-secondary-dark);
+}
+
+.markdown code {
+	background: var(--color-rule);
+	color: var(--color-ink);
+	border-radius: 4px;
+	padding: 0.15em 0.35em;
+	font-size: 0.9em;
+}
+
+.markdown pre {
+	background: var(--color-ink);
+	color: var(--color-surface);
+	border-radius: 6px;
+	padding: 0.75rem 1rem;
+	overflow-x: auto;
+	margin: 0.75em 0;
+}
+
+.markdown pre code {
+	background: transparent;
+	color: inherit;
+	padding: 0;
+	font-size: 0.85em;
+}
+
+.markdown blockquote {
+	border-left: 3px solid var(--color-primary);
+	color: var(--color-muted);
+	margin: 0.75em 0;
+	padding: 0.25em 0 0.25em 1em;
+}
+
+.markdown hr {
+	border: 0;
+	border-top: 1px solid var(--color-rule);
+	margin: 1.5em 0;
+}
+
+.markdown img {
+	max-width: 100%;
+	border-radius: 6px;
+}
+
+.markdown table {
+	border-collapse: collapse;
+	margin: 0.75em 0;
+	width: 100%;
+}
+
+.markdown th,
+.markdown td {
+	border: 1px solid var(--color-rule);
+	padding: 0.4em 0.6em;
+	text-align: left;
+}
+
+.markdown th {
+	background: var(--color-rule);
+	font-weight: 600;
+}

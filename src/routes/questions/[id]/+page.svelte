@@ -5,6 +5,7 @@
 	import { onMount } from "svelte";
 	import { get } from "svelte/store";
 	import VoteStack from "$lib/components/VoteStack.svelte";
+	import Markdown from "$lib/components/Markdown.svelte";
 	import { timeAgo } from "$lib/time";
 	import type { QuestionDoc, CommentDoc, TopicDoc, UnitDoc } from "$lib/types";
 
@@ -113,10 +114,8 @@
 			</div>
 		</div>
 
-		<div
-			class="border-rule text-ink mt-8 border-t pt-8 text-[15px] leading-relaxed whitespace-pre-wrap"
-		>
-			{question.content}
+		<div class="border-rule text-ink mt-8 border-t pt-8 text-[15px] leading-relaxed">
+			<Markdown content={question.content} />
 		</div>
 
 		<section class="border-rule mt-12 border-t pt-8">
