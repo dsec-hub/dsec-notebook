@@ -55,6 +55,7 @@
 					type="button"
 					class="nav-link"
 					onclick={() => {
+						if (!confirm("Sign out?")) return;
 						logout();
 						goto("/");
 					}}
@@ -156,6 +157,7 @@
 					type="button"
 					class="nav-link block"
 					onclick={() => {
+						if (!confirm("Sign out?")) return;
 						logout();
 						goto("/");
 						mobileMenuOpen = false;

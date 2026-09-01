@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { mutation } from "$lib/api";
+	import { query, mutation } from "$lib/api";
 	import { getToken } from "$lib/stores/auth";
 	import { goto } from "$app/navigation";
+	import { onMount } from "svelte";
 
 	let {
 		count = 0,
@@ -17,6 +18,16 @@
 	let userVote = $state(0);
 	let busy = $state(false);
 	const voteCount = $derived(localCount ?? count);
+
+	onMount(async () => {
+		const token = getToken();
+		if (!token) return;
+		try {
+			userVote = (await query("votes:getMyVote", { token, targetType, targetId })) ?? 0;
+		} catch {
+			/* ignore */
+		}
+	});
 
 	async function vote(value: 1 | -1, e: MouseEvent) {
 		e.preventDefault();

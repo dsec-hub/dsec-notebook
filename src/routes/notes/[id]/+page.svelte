@@ -6,6 +6,7 @@
 	import { get } from "svelte/store";
 	import VoteStack from "$lib/components/VoteStack.svelte";
 	import Markdown from "$lib/components/Markdown.svelte";
+	import MarkdownEditor from "$lib/components/MarkdownEditor.svelte";
 	import { timeAgo } from "$lib/time";
 	import type { NoteDoc, CommentDoc, TopicDoc, UnitDoc } from "$lib/types";
 
@@ -20,6 +21,12 @@
 	let commentLoading = $state(false);
 	let deleteLoading = $state(false);
 	let isAuthor = $state(false);
+
+	let editMode = $state(false);
+	let editTitle = $state("");
+	let editContent = $state("");
+	let editError = $state("");
+	let editLoading = $state(false);
 
 	onMount(async () => {
 		const id = page.params.id;
@@ -76,6 +83,55 @@
 			deleteLoading = false;
 		}
 	}
+
+	function startEdit() {
+		if (!note) return;
+		editTitle = note.title;
+		editContent = note.content;
+		editError = "";
+		editMode = true;
+	}
+
+	function cancelEdit() {
+		editMode = false;
+		editError = "";
+	}
+
+	async function saveEdit() {
+		if (!note) return;
+		if (!editTitle.trim() || !editContent.trim()) {
+			editError = "Title and content are required";
+			return;
+		}
+		const token = getToken();
+		if (!token) {
+			editError = "You must be signed in";
+			return;
+		}
+
+		editLoading = true;
+		editError = "";
+		try {
+			await mutation("notes:update", {
+				token,
+				id: note._id,
+				title: editTitle.trim(),
+				content: editContent.trim(),
+			});
+			const updated = await query("details:getNoteWithDetails", { id: note._id });
+			if (updated) {
+				note = updated as NoteDoc;
+				topic = (updated as any).topic ?? null;
+				unit = (updated as any).unit ?? null;
+				comments = (updated as any).comments ?? [];
+			}
+			editMode = false;
+		} catch (err: any) {
+			editError = err.message ?? "Failed to save";
+		} finally {
+			editLoading = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -96,29 +152,73 @@
 						·
 					{/if}{#if topic}{topic.name}{/if}
 				</p>
-				<h1 class="text-ink mt-2 font-serif text-3xl leading-tight font-medium sm:text-4xl">
-					{note.title}
-				</h1>
-				<p class="kicker mt-3">
-					{note.authorName} · {timeAgo(note.createdAt)}
-					{#if isAuthor}
-						·
-						<button
-							type="button"
-							onclick={deleteNote}
-							disabled={deleteLoading}
-							class="text-primary hover:text-primary-dark"
-						>
-							{deleteLoading ? "Deleting..." : "Delete"}
-						</button>
+				{#if editMode}
+					<input
+						type="text"
+						bind:value={editTitle}
+						placeholder="Note title"
+						class="field mt-2"
+					/>
+				{:else}
+					<h1
+						class="text-ink mt-2 font-serif text-3xl leading-tight font-medium sm:text-4xl"
+					>
+						{note.title}
+					</h1>
+					{#if note.updatedAt > note.createdAt}
+						<p class="kicker mt-2">Edited</p>
 					{/if}
-				</p>
+				{/if}
+				{#if !editMode}
+					<p class="kicker mt-3">
+						{note.authorName} · {timeAgo(note.createdAt)}
+						{#if isAuthor}
+							·
+							<button
+								type="button"
+								onclick={startEdit}
+								class="text-secondary hover:text-secondary-dark"
+							>
+								Edit
+							</button>
+							·
+							<button
+								type="button"
+								onclick={deleteNote}
+								disabled={deleteLoading}
+								class="text-primary hover:text-primary-dark"
+							>
+								{deleteLoading ? "Deleting..." : "Delete"}
+							</button>
+						{/if}
+					</p>
+				{/if}
 			</div>
 		</div>
 
-		<div class="border-rule text-ink mt-8 border-t pt-8 text-[15px] leading-relaxed">
-			<Markdown content={note.content} />
-		</div>
+		{#if editMode}
+			<div class="mt-8">
+				<MarkdownEditor bind:content={editContent} label="Content" rows={12} />
+				<div class="mt-4 flex items-center gap-3">
+					<button
+						type="button"
+						onclick={saveEdit}
+						disabled={editLoading}
+						class="btn-primary"
+					>
+						{editLoading ? "Saving..." : "Save changes"}
+					</button>
+					<button type="button" onclick={cancelEdit} class="kicker hover:text-ink">
+						Cancel
+					</button>
+					<span class="text-primary text-xs">{editError}</span>
+				</div>
+			</div>
+		{:else}
+			<div class="border-rule text-ink mt-8 border-t pt-8 text-[15px] leading-relaxed">
+				<Markdown content={note.content} />
+			</div>
+		{/if}
 
 		<section class="border-rule mt-12 border-t pt-8">
 			<p class="kicker mb-6">Comments ({comments.length})</p>

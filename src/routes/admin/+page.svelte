@@ -694,7 +694,7 @@
 					{/if}
 				</div>
 
-				<div class="border-rule h-fit border p-5">
+				<div class="border-rule sticky top-5 h-fit border p-5">
 					{#if userForm}
 						<form onsubmit={saveUser} class="space-y-5">
 							<p class="kicker">Edit account</p>

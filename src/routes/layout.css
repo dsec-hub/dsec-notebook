@@ -85,7 +85,7 @@ button {
 }
 
 .kicker {
-	@apply text-faint font-sans text-[11px] font-medium tracking-[0.18em] uppercase;
+	@apply font-sans text-[11px] font-medium tracking-[0.18em] uppercase;
 }
 
 .btn-primary {

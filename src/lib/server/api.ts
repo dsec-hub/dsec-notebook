@@ -295,10 +295,30 @@ function notesCreate(
 	const user = requireAuth(db, args.token);
 	const id = newId();
 	const now = Date.now();
-	db.prepare(
-		`INSERT INTO notes (id, title, content, topicId, unitId, authorId, authorName, createdAt, updatedAt, voteCount, commentCount)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)`,
-	).run(id, args.title, args.content, args.topicId, args.unitId, user._id, user.name, now, now);
+	db.exec("BEGIN");
+	try {
+		db.prepare(
+			`INSERT INTO notes (id, title, content, topicId, unitId, authorId, authorName, createdAt, updatedAt, voteCount, commentCount)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0)`,
+		).run(
+			id,
+			args.title,
+			args.content,
+			args.topicId,
+			args.unitId,
+			user._id,
+			user.name,
+			now,
+			now,
+		);
+		db.prepare(
+			"INSERT INTO votes (id, userId, targetType, targetId, value) VALUES (?, ?, 'note', ?, 1)",
+		).run(newId(), user._id, id);
+		db.exec("COMMIT");
+	} catch (err) {
+		db.exec("ROLLBACK");
+		throw err;
+	}
 	return id;
 }
 
@@ -348,6 +368,27 @@ function notesRemove(db: Db, args: { token: string; id: string }) {
 	db.prepare("DELETE FROM notes WHERE id = ?").run(args.id);
 }
 
+function notesUpdate(db: Db, args: { token: string; id: string; title: string; content: string }) {
+	const user = requireAuth(db, args.token);
+	const note = db.prepare("SELECT id, authorId FROM notes WHERE id = ?").get(args.id) as
+		| { id: string; authorId: string }
+		| undefined;
+	if (!note || note.authorId !== user._id) throw new Error("Not authorized");
+
+	const title = (args.title ?? "").trim();
+	const content = (args.content ?? "").trim();
+	if (!title || !content) throw new Error("Title and content are required");
+
+	const updatedAt = Date.now();
+	db.prepare("UPDATE notes SET title = ?, content = ?, updatedAt = ? WHERE id = ?").run(
+		title,
+		content,
+		updatedAt,
+		args.id,
+	);
+	return { updatedAt };
+}
+
 // ---- questions ----
 
 const QUESTION_COLUMNS =
@@ -360,10 +401,30 @@ function questionsCreate(
 	const user = requireAuth(db, args.token);
 	const id = newId();
 	const now = Date.now();
-	db.prepare(
-		`INSERT INTO questions (id, title, content, topicId, unitId, authorId, authorName, createdAt, updatedAt, voteCount, answerCount, solved)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0)`,
-	).run(id, args.title, args.content, args.topicId, args.unitId, user._id, user.name, now, now);
+	db.exec("BEGIN");
+	try {
+		db.prepare(
+			`INSERT INTO questions (id, title, content, topicId, unitId, authorId, authorName, createdAt, updatedAt, voteCount, answerCount, solved)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, 0)`,
+		).run(
+			id,
+			args.title,
+			args.content,
+			args.topicId,
+			args.unitId,
+			user._id,
+			user.name,
+			now,
+			now,
+		);
+		db.prepare(
+			"INSERT INTO votes (id, userId, targetType, targetId, value) VALUES (?, ?, 'question', ?, 1)",
+		).run(newId(), user._id, id);
+		db.exec("COMMIT");
+	} catch (err) {
+		db.exec("ROLLBACK");
+		throw err;
+	}
 	return id;
 }
 
@@ -439,6 +500,30 @@ function questionsRemove(db: Db, args: { token: string; id: string }) {
 		| undefined;
 	if (!question || question.authorId !== user._id) throw new Error("Not authorized");
 	db.prepare("DELETE FROM questions WHERE id = ?").run(args.id);
+}
+
+function questionsUpdate(
+	db: Db,
+	args: { token: string; id: string; title: string; content: string },
+) {
+	const user = requireAuth(db, args.token);
+	const question = db.prepare("SELECT id, authorId FROM questions WHERE id = ?").get(args.id) as
+		| { id: string; authorId: string }
+		| undefined;
+	if (!question || question.authorId !== user._id) throw new Error("Not authorized");
+
+	const title = (args.title ?? "").trim();
+	const content = (args.content ?? "").trim();
+	if (!title || !content) throw new Error("Title and content are required");
+
+	const updatedAt = Date.now();
+	db.prepare("UPDATE questions SET title = ?, content = ?, updatedAt = ? WHERE id = ?").run(
+		title,
+		content,
+		updatedAt,
+		args.id,
+	);
+	return { updatedAt };
 }
 
 // ---- comments ----
@@ -564,6 +649,17 @@ function votesCast(
 	}
 
 	return { voteCount, userVote };
+}
+
+function votesGetMyVote(
+	db: Db,
+	args: { token: string; targetType: "note" | "question"; targetId: string },
+) {
+	const user = requireAuth(db, args.token);
+	const row = db
+		.prepare("SELECT value FROM votes WHERE userId = ? AND targetType = ? AND targetId = ?")
+		.get(user._id, args.targetType, args.targetId) as { value: number } | undefined;
+	return row?.value ?? 0;
 }
 
 // ---- details ----
@@ -949,18 +1045,21 @@ const handlers: Record<string, Handler> = {
 	"search:all": searchAll,
 	"notes:getById": notesGetById,
 	"notes:remove": notesRemove,
+	"notes:update": notesUpdate,
 	"questions:create": questionsCreate,
 	"questions:list": questionsList,
 	"questions:search": questionsSearch,
 	"questions:getById": questionsGetById,
 	"questions:markSolved": questionsMarkSolved,
 	"questions:remove": questionsRemove,
+	"questions:update": questionsUpdate,
 	"comments:createOnNote": commentsCreateOnNote,
 	"comments:createOnQuestion": commentsCreateOnQuestion,
 	"comments:listByNote": commentsListByNote,
 	"comments:listByQuestion": commentsListByQuestion,
 	"comments:remove": commentsRemove,
 	"votes:cast": votesCast,
+	"votes:getMyVote": votesGetMyVote,
 	"details:getNoteWithDetails": getNoteWithDetails,
 	"details:getQuestionWithDetails": getQuestionWithDetails,
 	"admin:getState": adminGetState,

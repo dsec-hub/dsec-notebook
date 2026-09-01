@@ -17,7 +17,6 @@
 	let useCustomUnit = $state(false);
 	let error = $state("");
 	let loading = $state(false);
-	let success = $state("");
 
 	onMount(async () => {
 		await initAuth();
@@ -33,7 +32,6 @@
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 		error = "";
-		success = "";
 
 		if (!title.trim() || !content.trim()) {
 			error = "Title and content are required";
@@ -67,25 +65,15 @@
 				}
 			}
 
-			await mutation("notes:create", {
+			const id = (await mutation("notes:create", {
 				token,
 				title: title.trim(),
 				content: content.trim(),
 				topicId: selectedTopicId,
 				unitId,
-			});
+			})) as string;
 
-			success = "Note published.";
-			title = "";
-			content = "";
-			selectedTopicId = "";
-			selectedUnitId = "";
-			customUnit = "";
-			useCustomUnit = false;
-
-			setTimeout(() => {
-				success = "";
-			}, 3000);
+			goto(`/notes/${id}`);
 		} catch (err: any) {
 			error = err.message ?? "Failed to publish note";
 		} finally {
@@ -103,10 +91,6 @@
 	<p class="text-muted mt-2 mb-10 text-[15px]">
 		Share study notes with the Deakin community. Focus on a specific topic, not an entire unit.
 	</p>
-
-	{#if success}
-		<p class="text-secondary mb-6 text-sm">{success}</p>
-	{/if}
 
 	<form onsubmit={handleSubmit} class="border-rule space-y-6 border-t pt-8">
 		<div>

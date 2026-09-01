@@ -80,14 +80,14 @@
 		<div class="flex gap-4">
 			<button
 				type="button"
-				class="kicker {sort === 'newest' ? 'text-ink' : ''}"
+				class="kicker {sort === 'newest' ? 'text-primary' : ''}"
 				onclick={() => (sort = "newest")}
 			>
 				Newest
 			</button>
 			<button
 				type="button"
-				class="kicker {sort === 'top' ? 'text-ink' : ''}"
+				class="kicker {sort === 'top' ? 'text-primary' : ''}"
 				onclick={() => (sort = "top")}
 			>
 				Top

@@ -109,10 +109,29 @@
 		<label for="markdown-editor" class="kicker mb-2 block">{label}</label>
 	{/if}
 
-	{#if mode === "write"}
-		<div
-			class="border-rule bg-surface mb-2 flex flex-wrap items-center gap-1 rounded-sm border p-1"
+	<div class="border-l border-t border-r border-rule w-fit">
+		<button
+			type="button"
+			class="{mode === 'write'
+				? 'text-primary'
+				: 'hover:text-primary'} text-sm px-2 py-2 border-r border-rule"
+			onclick={() => (mode = "write")}
 		>
+			Write
+		</button>
+		<button
+			type="button"
+			class="{mode === 'preview'
+				? 'text-primary'
+				: 'hover:text-primary'} text-sm px-2 py-2"
+			onclick={() => (mode = "preview")}
+		>
+			Preview
+		</button>
+	</div>
+
+	{#if mode === "write"}
+		<div class="border-rule bg-surface flex flex-wrap items-center gap-1 rounded-sm border p-1">
 			<button type="button" class="editor-tool" title="Bold" onclick={() => wrap("**")}>
 				<strong>B</strong>
 			</button>
@@ -159,30 +178,6 @@
 				❝
 			</button>
 		</div>
-	{/if}
-
-	<div class="border-rule mb-2 flex items-center gap-2 border-b">
-		<button
-			type="button"
-			class="kicker {mode === 'write'
-				? 'text-ink'
-				: 'hover:text-primary'} border-b-2 border-transparent pb-2"
-			onclick={() => (mode = "write")}
-		>
-			Write
-		</button>
-		<button
-			type="button"
-			class="kicker {mode === 'preview'
-				? 'text-ink'
-				: 'hover:text-primary'} border-b-2 border-transparent pb-2"
-			onclick={() => (mode = "preview")}
-		>
-			Preview
-		</button>
-	</div>
-
-	{#if mode === "write"}
 		<textarea
 			id="markdown-editor"
 			bind:this={textarea}
