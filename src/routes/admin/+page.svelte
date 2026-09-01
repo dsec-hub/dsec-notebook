@@ -28,6 +28,7 @@
 		authorName: string;
 		createdAt: number;
 		unitCode?: string;
+		unitCode2?: string;
 		voteCount: number;
 		commentCount: number;
 	};
@@ -53,7 +54,7 @@
 	let pageError = $state("");
 
 	// Unit editor
-	let unitForm = $state({ id: "", code: "", name: "", description: "" });
+	let unitForm = $state({ id: "", code: "", code2: "", name: "", description: "" });
 	let unitBusy = $state(false);
 	let unitError = $state("");
 	let unitSuccess = $state("");
@@ -163,6 +164,7 @@
 		unitForm = {
 			id: unit._id,
 			code: unit.code,
+			code2: unit.code2 ?? "",
 			name: unit.name,
 			description: unit.description ?? "",
 		};
@@ -171,7 +173,7 @@
 	}
 
 	function resetUnitForm() {
-		unitForm = { id: "", code: "", name: "", description: "" };
+		unitForm = { id: "", code: "", code2: "", name: "", description: "" };
 		unitError = "";
 		unitSuccess = "";
 	}
@@ -186,6 +188,7 @@
 				token: adminToken(),
 				id: unitForm.id || undefined,
 				code: unitForm.code,
+				code2: unitForm.code2,
 				name: unitForm.name,
 				description: unitForm.description,
 			});
@@ -534,7 +537,9 @@
 								class="border-rule flex items-center justify-between gap-4 border-b py-3"
 							>
 								<div class="min-w-0">
-									<p class="text-ink font-medium">{unit.code}</p>
+									<p class="text-ink font-medium">
+										{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}
+									</p>
 									<p class="text-muted truncate text-sm">{unit.name}</p>
 								</div>
 								<div class="flex shrink-0 gap-3">
@@ -558,7 +563,10 @@
 					</div>
 				</div>
 
-				<form onsubmit={saveUnit} class="border-rule h-fit space-y-5 border p-5">
+				<form
+					onsubmit={saveUnit}
+					class="border-rule sticky top-5 h-fit space-y-5 border p-5"
+				>
 					<p class="kicker">{unitForm.id ? "Edit unit" : "Add unit"}</p>
 					<div>
 						<label for="unit-code" class="kicker mb-2 block">Code</label>
@@ -569,6 +577,18 @@
 							placeholder="e.g., SIT102"
 							class="field"
 							required
+						/>
+					</div>
+					<div>
+						<label for="unit-code2" class="kicker mb-2 block"
+							>Second code (optional)</label
+						>
+						<input
+							id="unit-code2"
+							type="text"
+							bind:value={unitForm.code2}
+							placeholder="e.g., SIT103"
+							class="field"
 						/>
 					</div>
 					<div>
@@ -747,7 +767,10 @@
 									<div class="min-w-0">
 										<p class="text-ink font-medium">{note.title}</p>
 										<p class="text-muted mt-1 truncate text-sm">
-											{note.unitCode ?? "—"} · {note.authorName} · {timeAgo(
+											{note.unitCode
+												? note.unitCode +
+													(note.unitCode2 ? ` / ${note.unitCode2}` : "")
+												: "—"} · {note.authorName} · {timeAgo(
 												note.createdAt,
 											)}
 										</p>

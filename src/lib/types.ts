@@ -20,6 +20,7 @@ export type TopicDoc = Doc<"topics"> & {
 
 export type UnitDoc = Doc<"units"> & {
 	code: string;
+	code2?: string;
 	name: string;
 	description?: string;
 };

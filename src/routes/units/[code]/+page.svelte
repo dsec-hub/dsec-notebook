@@ -36,7 +36,9 @@
 		<p class="kicker py-16">Loading</p>
 	{:else if unit}
 		<p class="kicker"><a href="/" class="hover:text-primary">Home</a> · Unit</p>
-		<h1 class="text-ink mt-2 font-serif text-4xl font-medium">{unit.code}</h1>
+		<h1 class="text-ink mt-2 font-serif text-4xl font-medium">
+			{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}
+		</h1>
 		<p class="text-muted mt-1 text-[15px]">{unit.name}</p>
 		{#if unit.description}
 			<p class="text-muted mt-2 text-sm">{unit.description}</p>
@@ -48,7 +50,7 @@
 				<FeedRow
 					href="/notes/{note._id}"
 					title={note.title}
-					unitCode={unit.code}
+					unitCode={unit.code + (unit.code2 ? ` / ${unit.code2}` : "")}
 					meta="{note.authorName} · {timeAgo(
 						note.createdAt,
 					)} · {note.commentCount} comment{note.commentCount === 1 ? '' : 's'}"
@@ -65,7 +67,7 @@
 				<FeedRow
 					href="/questions/{question._id}"
 					title={question.title}
-					unitCode={unit.code}
+					unitCode={unit.code + (unit.code2 ? ` / ${unit.code2}` : "")}
 					meta="{question.authorName} · {timeAgo(
 						question.createdAt,
 					)} · {question.answerCount} answer{question.answerCount === 1 ? '' : 's'}"

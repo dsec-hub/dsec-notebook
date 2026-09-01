@@ -148,7 +148,9 @@
 					<select id="unit" bind:value={selectedUnitId} class="field">
 						<option value="">Select a unit...</option>
 						{#each units as unit}
-							<option value={unit._id}>{unit.code} — {unit.name}</option>
+							<option value={unit._id}
+								>{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""} — {unit.name}</option
+							>
 						{/each}
 					</select>
 				{/if}

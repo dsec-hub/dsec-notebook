@@ -89,7 +89,9 @@
 			<VoteStack count={note.voteCount} targetType="note" targetId={note._id} />
 			<div class="min-w-0 flex-1">
 				<p class="kicker">
-					{#if unit}{unit.code}{/if}{#if unit && topic}
+					{#if unit}{unit.code}{unit.code2
+							? ` / ${unit.code2}`
+							: ""}{/if}{#if unit && topic}
 						·
 					{/if}{#if topic}{topic.name}{/if}
 				</p>

@@ -30,6 +30,7 @@ function createSchema(database: DatabaseSync) {
     CREATE TABLE IF NOT EXISTS units (
       id TEXT PRIMARY KEY,
       code TEXT NOT NULL UNIQUE,
+      code2 TEXT,
       name TEXT NOT NULL,
       description TEXT
     );
@@ -213,6 +214,11 @@ function migrate(database: DatabaseSync) {
 	}
 	if (!columns.some((c) => c.name === "role")) {
 		database.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'");
+	}
+
+	const unitColumns = database.prepare("PRAGMA table_info(units)").all() as { name: string }[];
+	if (!unitColumns.some((c) => c.name === "code2")) {
+		database.exec("ALTER TABLE units ADD COLUMN code2 TEXT");
 	}
 }
 

@@ -255,24 +255,27 @@ function topicsGetAll(db: Db) {
 // ---- units ----
 
 function unitsGetByCode(db: Db, args: { code: string }) {
+	const code = args.code.toUpperCase();
 	return (
 		db
-			.prepare("SELECT id AS _id, code, name, description FROM units WHERE code = ?")
-			.get(args.code.toUpperCase()) ?? null
+			.prepare(
+				"SELECT id AS _id, code, code2, name, description FROM units WHERE code = ? OR code2 = ?",
+			)
+			.get(code, code) ?? null
 	);
 }
 
 function unitsGetAll(db: Db) {
 	return db
-		.prepare("SELECT id AS _id, code, name, description FROM units ORDER BY code ASC")
+		.prepare("SELECT id AS _id, code, code2, name, description FROM units ORDER BY code ASC")
 		.all();
 }
 
 function unitsCreateCustom(db: Db, args: { code: string; name: string }) {
 	const code = args.code.toUpperCase();
-	const existing = db.prepare("SELECT id AS _id FROM units WHERE code = ?").get(code) as
-		| { _id: string }
-		| undefined;
+	const existing = db
+		.prepare("SELECT id AS _id FROM units WHERE code = ? OR code2 = ?")
+		.get(code, code) as { _id: string } | undefined;
 	if (existing) return existing._id;
 
 	const id = newId();
@@ -550,7 +553,7 @@ function getNoteWithDetails(db: Db, args: { id: string }) {
 		.prepare("SELECT id AS _id, name, slug, description FROM topics WHERE id = ?")
 		.get(note.topicId);
 	const unit = db
-		.prepare("SELECT id AS _id, code, name, description FROM units WHERE id = ?")
+		.prepare("SELECT id AS _id, code, code2, name, description FROM units WHERE id = ?")
 		.get(note.unitId);
 	const comments = commentsListByNote(db, { noteId: note._id });
 
@@ -567,7 +570,7 @@ function getQuestionWithDetails(db: Db, args: { id: string }) {
 		.prepare("SELECT id AS _id, name, slug, description FROM topics WHERE id = ?")
 		.get(question.topicId);
 	const unit = db
-		.prepare("SELECT id AS _id, code, name, description FROM units WHERE id = ?")
+		.prepare("SELECT id AS _id, code, code2, name, description FROM units WHERE id = ?")
 		.get(question.unitId);
 	const answers = commentsListByQuestion(db, { questionId: question._id });
 
@@ -635,35 +638,51 @@ function adminCompleteSetup(db: Db, args: { email: string; code: string }) {
 
 function adminUnitsSave(
 	db: Db,
-	args: { token: string; id?: string; code: string; name: string; description?: string },
+	args: {
+		token: string;
+		id?: string;
+		code: string;
+		code2?: string;
+		name: string;
+		description?: string;
+	},
 ) {
 	requireAdmin(db, args.token);
 	const code = (args.code ?? "").trim().toUpperCase();
 	const name = (args.name ?? "").trim();
 	if (!code || !name) throw new Error("Code and name are required");
 
+	const code2 = (args.code2 ?? "").trim().toUpperCase() || null;
+	if (code2 && code2 === code)
+		throw new Error("The second code must differ from the primary code");
+
 	const duplicate = db
-		.prepare("SELECT id AS _id FROM units WHERE code = ? AND id != ?")
-		.get(code, args.id ?? "") as { _id: string } | undefined;
+		.prepare("SELECT id AS _id FROM units WHERE (code = ? OR code2 = ?) AND id != ?")
+		.get(code, code, args.id ?? "") as { _id: string } | undefined;
 	if (duplicate) throw new Error("A unit with this code already exists");
+
+	if (code2) {
+		const duplicate2 = db
+			.prepare("SELECT id AS _id FROM units WHERE (code = ? OR code2 = ?) AND id != ?")
+			.get(code2, code2, args.id ?? "") as { _id: string } | undefined;
+		if (duplicate2) throw new Error("A unit with this second code already exists");
+	}
 
 	const description = args.description?.trim() || null;
 	if (args.id) {
 		const existing = db.prepare("SELECT id AS _id FROM units WHERE id = ?").get(args.id);
 		if (!existing) throw new Error("Unit not found");
-		db.prepare("UPDATE units SET code = ?, name = ?, description = ? WHERE id = ?").run(
-			code,
-			name,
-			description,
-			args.id,
-		);
+		db.prepare(
+			"UPDATE units SET code = ?, code2 = ?, name = ?, description = ? WHERE id = ?",
+		).run(code, code2, name, description, args.id);
 		return args.id;
 	}
 
 	const id = newId();
-	db.prepare("INSERT INTO units (id, code, name, description) VALUES (?, ?, ?, ?)").run(
+	db.prepare("INSERT INTO units (id, code, code2, name, description) VALUES (?, ?, ?, ?, ?)").run(
 		id,
 		code,
+		code2,
 		name,
 		description,
 	);
@@ -797,7 +816,8 @@ function adminNotesList(db: Db, args: { token: string }) {
         n.updatedAt,
         n.voteCount,
         n.commentCount,
-        u.code AS unitCode
+        u.code AS unitCode,
+        u.code2 AS unitCode2
       FROM notes n
       LEFT JOIN units u ON u.id = n.unitId
       ORDER BY n.createdAt DESC`,

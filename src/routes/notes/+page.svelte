@@ -56,7 +56,7 @@
 					class="chip {selectedUnitId === unit._id ? 'chip-active' : ''}"
 					onclick={() => (selectedUnitId = unit._id)}
 				>
-					{unit.code}
+					{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}
 				</button>
 			{/each}
 		</div>
@@ -85,7 +85,9 @@
 			<FeedRow
 				href="/notes/{note._id}"
 				title={note.title}
-				unitCode={note.unit?.code}
+				unitCode={note.unit
+					? note.unit.code + (note.unit.code2 ? ` / ${note.unit.code2}` : "")
+					: undefined}
 				meta="{note.authorName} · {timeAgo(
 					note.createdAt,
 				)} · {note.commentCount} comment{note.commentCount === 1 ? '' : 's'}"

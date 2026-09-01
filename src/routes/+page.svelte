@@ -54,7 +54,7 @@
 						class="group border-rule flex items-baseline justify-between gap-4 border-b px-5 py-3"
 					>
 						<span class="text-ink group-hover:text-primary font-serif text-lg"
-							>{unit.code}</span
+							>{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}</span
 						>
 						<span class="text-muted truncate text-sm">{unit.name}</span>
 					</a>
