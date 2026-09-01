@@ -398,6 +398,31 @@ function questionsGetById(db: Db, args: { id: string }) {
 	return row ? mapQuestion(row) : null;
 }
 
+function questionsSearch(db: Db, args: { query: string; limit?: number }) {
+	const all = db
+		.prepare(`SELECT ${QUESTION_COLUMNS} FROM questions ORDER BY createdAt DESC LIMIT ?`)
+		.all(args.limit ?? 200) as Record<string, any>[];
+	const q = args.query.toLowerCase();
+	return all
+		.filter(
+			(qr) =>
+				String(qr.title).toLowerCase().includes(q) ||
+				String(qr.content).toLowerCase().includes(q),
+		)
+		.map(mapQuestion);
+}
+
+function searchAll(db: Db, args: { query: string; limit?: number }) {
+	const limit = args.limit ?? 200;
+	const notes = notesSearch(db, { query: args.query, limit }) as Record<string, any>[];
+	const questions = questionsSearch(db, { query: args.query, limit }) as Record<string, any>[];
+	const combined: Record<string, any>[] = [
+		...notes.map((n) => ({ ...n, type: "note" })),
+		...questions.map((q) => ({ ...q, type: "question" })),
+	];
+	return combined.sort((a, b) => b.createdAt - a.createdAt);
+}
+
 function questionsMarkSolved(db: Db, args: { token: string; id: string }) {
 	const user = requireAuth(db, args.token);
 	const question = db.prepare("SELECT id, authorId FROM questions WHERE id = ?").get(args.id) as
@@ -921,10 +946,12 @@ const handlers: Record<string, Handler> = {
 	"notes:create": notesCreate,
 	"notes:list": notesList,
 	"notes:search": notesSearch,
+	"search:all": searchAll,
 	"notes:getById": notesGetById,
 	"notes:remove": notesRemove,
 	"questions:create": questionsCreate,
 	"questions:list": questionsList,
+	"questions:search": questionsSearch,
 	"questions:getById": questionsGetById,
 	"questions:markSolved": questionsMarkSolved,
 	"questions:remove": questionsRemove,

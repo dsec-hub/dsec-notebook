@@ -7,6 +7,16 @@
 	let mobileMenuOpen = $state(false);
 	let auth = $state(false);
 	let admin = $state(false);
+	let searchQuery = $state("");
+
+	function submitSearch(e: SubmitEvent) {
+		e.preventDefault();
+		const q = searchQuery.trim();
+		if (!q) return;
+		mobileMenuOpen = false;
+		searchQuery = "";
+		goto(`/search?q=${encodeURIComponent(q)}`);
+	}
 
 	onMount(() => {
 		initAuth();
@@ -50,6 +60,15 @@
 			{:else}
 				<a href="/auth/login" class="nav-link">Sign in</a>
 			{/if}
+			<form onsubmit={submitSearch}>
+				<input
+					type="search"
+					bind:value={searchQuery}
+					placeholder="Search"
+					aria-label="Search notes and questions"
+					class="border-rule text-ink placeholder:text-faint focus:border-primary w-40 rounded-none border bg-white px-2.5 py-1.5 text-[11px] tracking-wide transition-colors outline-none"
+				/>
+			</form>
 		</nav>
 
 		<button
@@ -71,6 +90,15 @@
 
 	{#if mobileMenuOpen}
 		<nav class="border-rule space-y-3 border-t px-4 py-4 md:hidden">
+			<form onsubmit={submitSearch}>
+				<input
+					type="search"
+					bind:value={searchQuery}
+					placeholder="Search"
+					aria-label="Search notes and questions"
+					class="border-rule text-ink placeholder:text-faint focus:border-primary w-full rounded-none border bg-white px-3 py-2 text-sm tracking-wide transition-colors outline-none"
+				/>
+			</form>
 			<a href="/notes" class="nav-link block" onclick={() => (mobileMenuOpen = false)}
 				>Notes</a
 			>

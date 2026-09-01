@@ -9,6 +9,7 @@
 		voteCount = 0,
 		targetType,
 		targetId,
+		tag,
 	}: {
 		href: string;
 		title: string;
@@ -17,12 +18,18 @@
 		voteCount?: number;
 		targetType: "note" | "question";
 		targetId: string;
+		tag?: string;
 	} = $props();
 </script>
 
 <article class="border-rule flex gap-4 border-b py-5">
 	<VoteStack count={voteCount} {targetType} {targetId} />
 	<a {href} class="group min-w-0 flex-1">
+		{#if tag}
+			<p class="text-secondary mb-1 text-[10px] font-semibold tracking-[0.16em] uppercase">
+				{tag}
+			</p>
+		{/if}
 		{#if unitCode}
 			<p class="kicker">{unitCode}</p>
 		{/if}

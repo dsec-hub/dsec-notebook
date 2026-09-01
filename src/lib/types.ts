@@ -52,6 +52,8 @@ export type QuestionDoc = Doc<"questions"> & {
 	solved: boolean;
 };
 
+export type SearchResult = (NoteDoc & { type: "note" }) | (QuestionDoc & { type: "question" });
+
 export type CommentDoc = Doc<"comments"> & {
 	content: string;
 	authorId: Id<"users">;

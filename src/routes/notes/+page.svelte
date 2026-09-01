@@ -10,6 +10,7 @@
 	let loading = $state(true);
 	let selectedUnitId = $state("");
 	let sort = $state<"newest" | "top">("newest");
+	let searchQuery = $state("");
 
 	onMount(async () => {
 		const [n, u] = await Promise.all([query("notes:list", {}), query("units:getAll")]);
@@ -25,7 +26,13 @@
 	});
 
 	const visible = $derived.by(() => {
+		const q = searchQuery.trim().toLowerCase();
 		let list = selectedUnitId ? notes.filter((n) => n.unitId === selectedUnitId) : notes;
+		if (q) {
+			list = list.filter(
+				(n) => n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q),
+			);
+		}
 		if (sort === "top") list = [...list].sort((a, b) => b.voteCount - a.voteCount);
 		return list;
 	});
@@ -39,6 +46,16 @@
 	<div class="border-rule flex items-end justify-between gap-4 border-b pb-6">
 		<h1 class="text-ink font-serif text-4xl font-medium">Notes</h1>
 		<a href="/post/note" class="btn-primary">Post a note</a>
+	</div>
+
+	<div class="border-rule border-b py-4">
+		<input
+			type="search"
+			bind:value={searchQuery}
+			placeholder="Search notes..."
+			aria-label="Search notes"
+			class="field"
+		/>
 	</div>
 
 	<div class="border-rule flex flex-wrap items-center justify-between gap-4 border-b py-4">

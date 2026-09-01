@@ -3,9 +3,9 @@
 	import { onMount } from "svelte";
 	import FeedRow from "$lib/components/FeedRow.svelte";
 	import { timeAgo } from "$lib/time";
-	import type { NoteDoc } from "$lib/types";
+	import type { SearchResult } from "$lib/types";
 
-	let results: NoteDoc[] = $state([]);
+	let results: SearchResult[] = $state([]);
 	let loading = $state(true);
 	let searchQuery = $state("");
 	let ranQuery = $state(false);
@@ -14,7 +14,7 @@
 		searchQuery = new URL(window.location.href).searchParams.get("q") ?? "";
 		if (searchQuery) {
 			ranQuery = true;
-			results = (await query("notes:search", { query: searchQuery })) as NoteDoc[];
+			results = (await query("search:all", { query: searchQuery })) as SearchResult[];
 		}
 		loading = false;
 	});
@@ -40,7 +40,7 @@
 			id="q"
 			type="search"
 			bind:value={searchQuery}
-			placeholder="Search notes..."
+			placeholder="Search notes and questions..."
 			class="field"
 		/>
 	</form>
@@ -48,22 +48,34 @@
 	{#if loading}
 		<p class="kicker py-16">Loading</p>
 	{:else if ranQuery}
-		{#each results as note}
-			<FeedRow
-				href="/notes/{note._id}"
-				title={note.title}
-				meta="{note.authorName} · {timeAgo(note.createdAt)}"
-				voteCount={note.voteCount}
-				targetType="note"
-				targetId={note._id}
-			/>
+		{#each results as result}
+			{#if result.type === "note"}
+				<FeedRow
+					href="/notes/{result._id}"
+					title={result.title}
+					meta="{result.authorName} · {timeAgo(
+						result.createdAt,
+					)} · {result.commentCount} comment{result.commentCount === 1 ? '' : 's'}"
+					voteCount={result.voteCount}
+					targetType="note"
+					targetId={result._id}
+					tag="Note"
+				/>
+			{:else}
+				<FeedRow
+					href="/questions/{result._id}"
+					title={result.title}
+					meta="{result.authorName} · {timeAgo(
+						result.createdAt,
+					)} · {result.answerCount} answer{result.answerCount === 1 ? '' : 's'}"
+					voteCount={result.voteCount}
+					targetType="question"
+					targetId={result._id}
+					tag="Question"
+				/>
+			{/if}
 		{:else}
 			<p class="text-muted text-sm">No results found for “{searchQuery}”.</p>
-			<a
-				href="/notes"
-				class="text-secondary hover:text-secondary-dark mt-4 inline-block text-sm"
-				>Browse notes</a
-			>
 		{/each}
 	{/if}
 </div>
