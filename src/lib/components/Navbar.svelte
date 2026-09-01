@@ -107,7 +107,7 @@
 					bind:value={searchQuery}
 					placeholder="Search"
 					aria-label="Search notes and questions"
-					class="border-rule text-ink placeholder:text-faint focus:border-primary bg-surface w-40 rounded-none border px-2.5 py-1.5 text-[11px] tracking-wide transition-colors outline-none"
+					class="border-rule text-ink placeholder:text-faint focus:border-primary bg-surface w-40 rounded-sm border px-2.5 py-1.5 text-[11px] tracking-wide transition-colors outline-none"
 				/>
 			</form>
 		</nav>
@@ -137,7 +137,7 @@
 					bind:value={searchQuery}
 					placeholder="Search"
 					aria-label="Search notes and questions"
-					class="border-rule text-ink placeholder:text-faint focus:border-primary bg-surface w-full rounded-none border px-3 py-2 text-sm tracking-wide transition-colors outline-none"
+					class="border-rule text-ink placeholder:text-faint focus:border-primary bg-surface w-full rounded-sm border px-3 py-2 text-sm tracking-wide transition-colors outline-none"
 				/>
 			</form>
 			<a href="/notes" class="nav-link block" onclick={() => (mobileMenuOpen = false)}

@@ -89,23 +89,23 @@ button {
 }
 
 .btn-primary {
-	@apply border-primary bg-primary hover:brightness-110 inline-flex items-center justify-center rounded-none border px-5 py-2.5 text-[11px] font-medium tracking-[0.14em] text-white uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+	@apply border-primary bg-primary inline-flex items-center justify-center rounded-sm border px-5 py-2.5 text-[11px] font-medium tracking-[0.14em] text-white uppercase transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 .btn-secondary {
-	@apply border-secondary text-secondary hover:bg-secondary hover:text-on-primary inline-flex items-center justify-center rounded-none border bg-transparent px-5 py-2.5 text-[11px] font-medium tracking-[0.14em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+	@apply border-secondary text-secondary hover:bg-secondary hover:text-on-primary inline-flex items-center justify-center rounded-sm border bg-transparent px-5 py-2.5 text-[11px] font-medium tracking-[0.14em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 .btn-ghost {
-	@apply border-ink text-ink hover:border-primary hover:text-primary inline-flex items-center justify-center rounded-none border bg-transparent px-5 py-2.5 text-[11px] font-medium tracking-[0.14em] uppercase transition-colors;
+	@apply border-ink text-ink hover:border-primary hover:text-primary inline-flex items-center justify-center rounded-sm border bg-transparent px-5 py-2.5 text-[11px] font-medium tracking-[0.14em] uppercase transition-colors;
 }
 
 .field {
-	@apply border-rule text-ink placeholder:text-faint focus:border-primary bg-surface block w-full rounded-none border px-3 py-2.5 text-sm transition-colors outline-none;
+	@apply border-rule text-ink placeholder:text-faint focus:border-primary bg-surface block w-full rounded-sm border px-3 py-2.5 text-sm transition-colors outline-none;
 }
 
 .chip {
-	@apply border-rule text-ink hover:border-ink bg-surface inline-flex items-center rounded-none border px-3 py-1.5 font-sans text-[11px] font-medium tracking-[0.12em] uppercase transition-colors;
+	@apply border-rule text-ink hover:border-ink bg-surface inline-flex items-center rounded-sm border px-3 py-1.5 font-sans text-[11px] font-medium tracking-[0.12em] uppercase transition-colors;
 }
 
 .chip-active {

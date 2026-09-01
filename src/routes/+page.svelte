@@ -19,7 +19,7 @@
 </script>
 
 <svelte:head>
-	<title>Notebook — written by students</title>
+	<title>DSEC Notebook</title>
 </svelte:head>
 
 <div class="page">
@@ -47,11 +47,11 @@
 		{:else if error}
 			<p class="kicker">{error}</p>
 		{:else}
-			<div class="grid grid-cols-1 sm:grid-cols-2">
+			<div class="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-5">
 				{#each units as unit}
 					<a
 						href="/units/{unit.code}"
-						class="group border-rule flex items-baseline justify-between gap-4 border-b px-5 py-3"
+						class="group border-rule flex items-baseline justify-between gap-4 border-b py-3"
 					>
 						<span class="text-ink group-hover:text-primary font-serif text-lg"
 							>{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}</span
