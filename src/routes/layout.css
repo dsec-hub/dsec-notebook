@@ -1,8 +1,48 @@
 @import "tailwindcss";
 
+@font-face {
+	font-family: "Inter";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("/fonts/Inter/Inter_18pt-Regular.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "Inter";
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url("/fonts/Inter/Inter_18pt-Medium.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "Inter";
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url("/fonts/Inter/Inter_18pt-SemiBold.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "Montserrat";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("/fonts/Montserrat/Montserrat-Regular.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "Montserrat";
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url("/fonts/Montserrat/Montserrat-Medium.ttf") format("truetype");
+}
+
 @theme {
 	--font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-	--font-serif: "EB Garamond", "Iowan Old Style", Palatino, Georgia, serif;
+	--font-serif: "Montserrat", "Iowan Old Style", Palatino, Georgia, serif;
 	--color-primary: #ea4c65;
 	--color-primary-dark: #d43d56;
 	--color-secondary: #00bcd4;
