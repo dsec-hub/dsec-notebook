@@ -7,6 +7,7 @@
 	import VoteStack from "$lib/components/VoteStack.svelte";
 	import Markdown from "$lib/components/Markdown.svelte";
 	import MarkdownEditor from "$lib/components/MarkdownEditor.svelte";
+	import CommentThread from "$lib/components/CommentThread.svelte";
 	import { timeAgo } from "$lib/time";
 	import type { NoteDoc, CommentDoc, TopicDoc, UnitDoc } from "$lib/types";
 
@@ -42,6 +43,11 @@
 		loading = false;
 	});
 
+	async function reloadComments() {
+		const updated = await query("details:getNoteWithDetails", { id: page.params.id });
+		if (updated) comments = (updated as any).comments ?? [];
+	}
+
 	async function postComment() {
 		if (!commentText.trim()) return;
 		const token = getToken();
@@ -59,8 +65,7 @@
 				parentId: page.params.id,
 			});
 			commentText = "";
-			const updated = await query("details:getNoteWithDetails", { id: page.params.id });
-			if (updated) comments = (updated as any).comments ?? [];
+			await reloadComments();
 		} catch (err: any) {
 			commentError = err.message ?? "Failed to post comment";
 		} finally {
@@ -250,36 +255,12 @@
 			{/if}
 
 			<div>
-				{#each comments as comment}
-					<div class="border-rule border-t py-4">
-						<p class="kicker">{comment.authorName} · {timeAgo(comment.createdAt)}</p>
-						<p class="text-ink mt-2 text-sm leading-relaxed whitespace-pre-wrap">
-							{comment.content}
-						</p>
-						{#if get(currentUser)?._id === comment.authorId}
-							<button
-								onclick={async () => {
-									const token = getToken();
-									if (!token) return;
-									try {
-										await mutation("comments:remove", {
-											token,
-											id: comment._id,
-										});
-										const updated = await query("details:getNoteWithDetails", {
-											id: page.params.id,
-										});
-										if (updated) comments = (updated as any).comments ?? [];
-									} catch (e) {}
-								}}
-								class="text-primary hover:text-primary-dark mt-2 text-xs"
-								>Delete</button
-							>
-						{/if}
-					</div>
-				{:else}
-					<p class="text-muted text-sm">No comments yet.</p>
-				{/each}
+				<CommentThread
+					{comments}
+					targetType="note"
+					targetId={note._id}
+					reload={reloadComments}
+				/>
 			</div>
 		</section>
 	{:else}

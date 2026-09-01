@@ -7,6 +7,7 @@
 	import VoteStack from "$lib/components/VoteStack.svelte";
 	import Markdown from "$lib/components/Markdown.svelte";
 	import MarkdownEditor from "$lib/components/MarkdownEditor.svelte";
+	import CommentThread from "$lib/components/CommentThread.svelte";
 	import { timeAgo } from "$lib/time";
 	import type { QuestionDoc, CommentDoc, TopicDoc, UnitDoc } from "$lib/types";
 
@@ -41,6 +42,11 @@
 		loading = false;
 	});
 
+	async function reloadAnswers() {
+		const updated = await query("details:getQuestionWithDetails", { id: page.params.id });
+		if (updated) answers = (updated as any).answers ?? [];
+	}
+
 	async function postAnswer() {
 		if (!answerText.trim()) return;
 		const token = getToken();
@@ -58,11 +64,7 @@
 				questionId: page.params.id,
 			});
 			answerText = "";
-			const updated = await query("details:getQuestionWithDetails", { id: page.params.id });
-			if (updated) {
-				question = { ...(updated as any), answers: undefined } as QuestionDoc;
-				answers = (updated as any).answers ?? [];
-			}
+			await reloadAnswers();
 		} catch (err: any) {
 			answerError = err.message ?? "Failed to post answer";
 		} finally {
@@ -250,37 +252,12 @@
 			{/if}
 
 			<div>
-				{#each answers as answer}
-					<div class="border-rule border-t py-4">
-						<p class="kicker">{answer.authorName} · {timeAgo(answer.createdAt)}</p>
-						<p class="text-ink mt-2 text-sm leading-relaxed whitespace-pre-wrap">
-							{answer.content}
-						</p>
-						{#if get(currentUser)?._id === answer.authorId}
-							<button
-								onclick={async () => {
-									const token = getToken();
-									if (!token) return;
-									try {
-										await mutation("comments:remove", {
-											token,
-											id: answer._id,
-										});
-										const updated = await query(
-											"details:getQuestionWithDetails",
-											{ id: page.params.id },
-										);
-										if (updated) answers = (updated as any).answers ?? [];
-									} catch (e) {}
-								}}
-								class="text-primary hover:text-primary-dark mt-2 text-xs"
-								>Delete</button
-							>
-						{/if}
-					</div>
-				{:else}
-					<p class="text-muted text-sm">No answers yet.</p>
-				{/each}
+				<CommentThread
+					comments={answers}
+					targetType="question"
+					targetId={question._id}
+					reload={reloadAnswers}
+				/>
 			</div>
 		</section>
 	{:else}

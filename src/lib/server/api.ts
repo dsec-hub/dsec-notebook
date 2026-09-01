@@ -529,7 +529,7 @@ function questionsUpdate(
 // ---- comments ----
 
 const COMMENT_COLUMNS =
-	"id AS _id, content, authorId, authorName, parentId, questionId, parentCommentId, createdAt";
+	"id AS _id, content, authorId, authorName, parentId, questionId, parentCommentId, createdAt, updatedAt";
 
 function commentsCreateOnNote(
 	db: Db,
@@ -537,9 +537,10 @@ function commentsCreateOnNote(
 ) {
 	const user = requireAuth(db, args.token);
 	const id = newId();
+	const now = Date.now();
 	db.prepare(
-		`INSERT INTO comments (id, content, authorId, authorName, parentId, parentCommentId, createdAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO comments (id, content, authorId, authorName, parentId, parentCommentId, createdAt, updatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 	).run(
 		id,
 		args.content,
@@ -547,7 +548,8 @@ function commentsCreateOnNote(
 		user.name,
 		args.parentId,
 		args.parentCommentId ?? null,
-		Date.now(),
+		now,
+		now,
 	);
 	db.prepare("UPDATE notes SET commentCount = commentCount + 1 WHERE id = ?").run(args.parentId);
 	return id;
@@ -559,9 +561,10 @@ function commentsCreateOnQuestion(
 ) {
 	const user = requireAuth(db, args.token);
 	const id = newId();
+	const now = Date.now();
 	db.prepare(
-		`INSERT INTO comments (id, content, authorId, authorName, questionId, parentCommentId, createdAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO comments (id, content, authorId, authorName, questionId, parentCommentId, createdAt, updatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 	).run(
 		id,
 		args.content,
@@ -569,7 +572,8 @@ function commentsCreateOnQuestion(
 		user.name,
 		args.questionId,
 		args.parentCommentId ?? null,
-		Date.now(),
+		now,
+		now,
 	);
 	db.prepare("UPDATE questions SET answerCount = answerCount + 1 WHERE id = ?").run(
 		args.questionId,
@@ -599,7 +603,49 @@ function commentsRemove(db: Db, args: { token: string; id: string }) {
 		| { id: string; authorId: string }
 		| undefined;
 	if (!comment || comment.authorId !== user._id) throw new Error("Not authorized");
-	db.prepare("DELETE FROM comments WHERE id = ?").run(args.id);
+
+	const ids = [args.id];
+	const stack = [args.id];
+	while (stack.length > 0) {
+		const current = stack.pop()!;
+		const children = db
+			.prepare("SELECT id FROM comments WHERE parentCommentId = ?")
+			.all(current) as { id: string }[];
+		for (const child of children) {
+			ids.push(child.id);
+			stack.push(child.id);
+		}
+	}
+
+	db.exec("BEGIN");
+	try {
+		for (const id of ids) {
+			db.prepare("DELETE FROM comments WHERE id = ?").run(id);
+		}
+		db.exec("COMMIT");
+	} catch (err) {
+		db.exec("ROLLBACK");
+		throw err;
+	}
+}
+
+function commentsUpdate(db: Db, args: { token: string; id: string; content: string }) {
+	const user = requireAuth(db, args.token);
+	const comment = db.prepare("SELECT id, authorId FROM comments WHERE id = ?").get(args.id) as
+		| { id: string; authorId: string }
+		| undefined;
+	if (!comment || comment.authorId !== user._id) throw new Error("Not authorized");
+
+	const content = (args.content ?? "").trim();
+	if (!content) throw new Error("Comment cannot be empty");
+
+	const updatedAt = Date.now();
+	db.prepare("UPDATE comments SET content = ?, updatedAt = ? WHERE id = ?").run(
+		content,
+		updatedAt,
+		args.id,
+	);
+	return { updatedAt };
 }
 
 // ---- votes ----
@@ -1058,6 +1104,7 @@ const handlers: Record<string, Handler> = {
 	"comments:listByNote": commentsListByNote,
 	"comments:listByQuestion": commentsListByQuestion,
 	"comments:remove": commentsRemove,
+	"comments:update": commentsUpdate,
 	"votes:cast": votesCast,
 	"votes:getMyVote": votesGetMyVote,
 	"details:getNoteWithDetails": getNoteWithDetails,

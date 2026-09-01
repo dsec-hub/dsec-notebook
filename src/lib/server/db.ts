@@ -72,7 +72,8 @@ function createSchema(database: DatabaseSync) {
       parentId TEXT,
       questionId TEXT,
       parentCommentId TEXT,
-      createdAt INTEGER NOT NULL
+      createdAt INTEGER NOT NULL,
+      updatedAt INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS votes (
@@ -219,6 +220,13 @@ function migrate(database: DatabaseSync) {
 	const unitColumns = database.prepare("PRAGMA table_info(units)").all() as { name: string }[];
 	if (!unitColumns.some((c) => c.name === "code2")) {
 		database.exec("ALTER TABLE units ADD COLUMN code2 TEXT");
+	}
+
+	const commentColumns = database.prepare("PRAGMA table_info(comments)").all() as {
+		name: string;
+	}[];
+	if (!commentColumns.some((c) => c.name === "updatedAt")) {
+		database.exec("ALTER TABLE comments ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0");
 	}
 }
 

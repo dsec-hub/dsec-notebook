@@ -62,4 +62,5 @@ export type CommentDoc = Doc<"comments"> & {
 	questionId?: Id<"questions">;
 	parentCommentId?: Id<"comments">;
 	createdAt: number;
+	updatedAt?: number;
 };

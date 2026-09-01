@@ -124,6 +124,10 @@ button {
 	@apply text-ink hover:border-primary hover:text-primary bg-surface inline-flex h-8 min-w-8 items-center justify-center rounded-sm border border-transparent px-1.5 font-sans text-xs font-medium transition-colors;
 }
 
+.thread-branch {
+	@apply w-3 shrink-0 cursor-pointer self-stretch border-l-2 border-rule transition hover:border-secondary hover:brightness-150;
+}
+
 .markdown {
 	font-size: inherit;
 	line-height: inherit;
