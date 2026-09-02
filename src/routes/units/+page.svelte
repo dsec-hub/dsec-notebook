@@ -94,6 +94,7 @@
 							<FeedRow
 								href={postPath(selectedUnit.code, note._id)}
 								title={note.title}
+								content={note.content}
 								unitCode={selectedUnit.code +
 									(selectedUnit.code2 ? ` / ${selectedUnit.code2}` : "")}
 								meta="{note.authorName} · {timeAgo(
@@ -114,6 +115,7 @@
 							<FeedRow
 								href={postPath(selectedUnit.code, question._id)}
 								title={question.title}
+								content={question.content}
 								unitCode={selectedUnit.code +
 									(selectedUnit.code2 ? ` / ${selectedUnit.code2}` : "")}
 								meta="{question.authorName} · {timeAgo(

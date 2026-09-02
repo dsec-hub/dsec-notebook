@@ -54,6 +54,7 @@
 				<FeedRow
 					href={postPath(result.unit!.code, result._id)}
 					title={result.title}
+					content={result.content}
 					unitCode={result.unit
 						? result.unit.code + (result.unit.code2 ? ` / ${result.unit.code2}` : "")
 						: undefined}
@@ -69,6 +70,7 @@
 				<FeedRow
 					href={postPath(result.unit!.code, result._id)}
 					title={result.title}
+					content={result.content}
 					unitCode={result.unit
 						? result.unit.code + (result.unit.code2 ? ` / ${result.unit.code2}` : "")
 						: undefined}

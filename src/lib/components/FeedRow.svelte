@@ -1,10 +1,12 @@
 <script lang="ts">
+	import { previewMarkdown } from "$lib/markdown";
 	import { unitPath } from "$lib/paths";
 	import VoteStack from "./VoteStack.svelte";
 
 	let {
 		href,
 		title,
+		content,
 		unitCode,
 		meta,
 		voteCount = 0,
@@ -14,6 +16,7 @@
 	}: {
 		href: string;
 		title: string;
+		content?: string;
 		unitCode?: string;
 		meta: string;
 		voteCount?: number;
@@ -40,6 +43,11 @@
 		>
 			{title}
 		</a>
+		{#if content?.trim()}
+			<p class="text-muted mt-1 line-clamp-2 text-sm leading-relaxed">
+				{previewMarkdown(content)}
+			</p>
+		{/if}
 		<p class="kicker mt-1.5">{meta}</p>
 	</div>
 </article>
