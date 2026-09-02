@@ -71,7 +71,7 @@ function normalizeEmail(email: string): string {
 function requireAuth(db: Db, token: string): Record<string, any> {
 	const user = db
 		.prepare(
-			"SELECT id AS _id, email, name, sessionToken, role, createdAt AS _creationTime FROM users WHERE sessionToken = ?",
+			"SELECT id AS _id, email, name, avatarUrl, sessionToken, role, createdAt AS _creationTime FROM users WHERE sessionToken = ?",
 		)
 		.get(token) as Record<string, any> | undefined;
 	if (!user) throw new Error("Not authenticated");
@@ -245,10 +245,124 @@ function usersGetByToken(db: Db, args: { token: string }) {
 	return (
 		db
 			.prepare(
-				"SELECT id AS _id, email, name, sessionToken, role, createdAt AS _creationTime FROM users WHERE sessionToken = ?",
+				"SELECT id AS _id, email, name, avatarUrl, sessionToken, role, createdAt AS _creationTime FROM users WHERE sessionToken = ?",
 			)
 			.get(args.token) ?? null
 	);
+}
+
+function usersUpdateProfile(
+	db: Db,
+	args: { token: string; name: string; avatarUrl?: string | null },
+) {
+	const user = requireAuth(db, args.token);
+	const name = (args.name ?? "").trim();
+	if (name.length < 2 || name.length > 50) {
+		throw new Error("Display name must be between 2 and 50 characters");
+	}
+
+	const avatarUrl = args.avatarUrl?.trim() || null;
+	if (avatarUrl && !/^\/uploads\/[a-zA-Z0-9-]+\.(png|jpe?g|gif|webp)$/.test(avatarUrl)) {
+		throw new Error("Invalid profile picture");
+	}
+
+	db.exec("BEGIN");
+	try {
+		db.prepare("UPDATE users SET name = ?, avatarUrl = ? WHERE id = ?").run(
+			name,
+			avatarUrl,
+			user._id,
+		);
+		db.prepare("UPDATE notes SET authorName = ? WHERE authorId = ?").run(name, user._id);
+		db.prepare("UPDATE questions SET authorName = ? WHERE authorId = ?").run(name, user._id);
+		db.prepare("UPDATE comments SET authorName = ? WHERE authorId = ?").run(name, user._id);
+		db.exec("COMMIT");
+	} catch (err) {
+		db.exec("ROLLBACK");
+		throw err;
+	}
+
+	return usersGetByToken(db, { token: args.token });
+}
+
+function usersChangePassword(
+	db: Db,
+	args: { token: string; currentPassword: string; newPassword: string },
+) {
+	const user = requireAuth(db, args.token);
+	const credentials = db.prepare("SELECT passwordHash FROM users WHERE id = ?").get(user._id) as
+		| { passwordHash: string | null }
+		| undefined;
+	if (
+		!credentials?.passwordHash ||
+		!verifyPassword(args.currentPassword ?? "", credentials.passwordHash)
+	) {
+		throw new Error("Current password is incorrect");
+	}
+
+	const newPassword = validatePassword(args.newPassword);
+	if (verifyPassword(newPassword, credentials.passwordHash)) {
+		throw new Error("New password must be different from your current password");
+	}
+	db.prepare("UPDATE users SET passwordHash = ? WHERE id = ?").run(
+		hashPassword(newPassword),
+		user._id,
+	);
+	return { ok: true };
+}
+
+function usersGetPublicProfile(db: Db, args: { id: string }) {
+	const profile = db
+		.prepare(
+			`SELECT
+        u.id AS _id,
+        u.name,
+        u.avatarUrl,
+        u.createdAt AS _creationTime,
+        (SELECT COUNT(*) FROM notes n WHERE n.authorId = u.id) AS noteCount,
+        (SELECT COUNT(*) FROM questions q WHERE q.authorId = u.id) AS questionCount,
+        (SELECT COUNT(*) FROM comments c WHERE c.authorId = u.id) AS commentCount
+      FROM users u
+      WHERE u.id = ?`,
+		)
+		.get(args.id) as Record<string, any> | undefined;
+	if (!profile) return null;
+
+	const posts = db
+		.prepare(
+			`SELECT id AS _id, 'note' AS type, title, createdAt, voteCount
+       FROM notes WHERE authorId = ?
+       UNION ALL
+       SELECT id AS _id, 'question' AS type, title, createdAt, voteCount
+       FROM questions WHERE authorId = ?
+       ORDER BY createdAt DESC
+       LIMIT 50`,
+		)
+		.all(args.id, args.id);
+	const comments = db
+		.prepare(
+			`SELECT
+        c.id AS _id,
+        c.content,
+        c.createdAt,
+        CASE WHEN c.parentId IS NOT NULL THEN 'note' ELSE 'question' END AS targetType,
+        COALESCE(c.parentId, c.questionId) AS targetId,
+        COALESCE(n.title, q.title) AS targetTitle
+      FROM comments c
+      LEFT JOIN notes n ON n.id = c.parentId
+      LEFT JOIN questions q ON q.id = c.questionId
+      WHERE c.authorId = ?
+      ORDER BY c.createdAt DESC
+      LIMIT 50`,
+		)
+		.all(args.id);
+
+	return {
+		...profile,
+		totalContributions: profile.noteCount + profile.questionCount + profile.commentCount,
+		posts,
+		comments,
+	};
 }
 
 // ---- topics ----
@@ -609,7 +723,7 @@ function questionsUpdate(
 // ---- comments ----
 
 const COMMENT_COLUMNS =
-	"id AS _id, content, authorId, authorName, parentId, questionId, parentCommentId, createdAt, updatedAt";
+	"c.id AS _id, c.content, c.authorId, COALESCE(u.name, c.authorName) AS authorName, u.avatarUrl, c.parentId, c.questionId, c.parentCommentId, c.createdAt, c.updatedAt";
 
 function commentsCreateOnNote(
 	db: Db,
@@ -664,7 +778,7 @@ function commentsCreateOnQuestion(
 function commentsListByNote(db: Db, args: { noteId: string }) {
 	return db
 		.prepare(
-			`SELECT ${COMMENT_COLUMNS} FROM comments WHERE parentId = ? ORDER BY createdAt ASC`,
+			`SELECT ${COMMENT_COLUMNS} FROM comments c LEFT JOIN users u ON u.id = c.authorId WHERE c.parentId = ? ORDER BY c.createdAt ASC`,
 		)
 		.all(args.noteId);
 }
@@ -672,7 +786,7 @@ function commentsListByNote(db: Db, args: { noteId: string }) {
 function commentsListByQuestion(db: Db, args: { questionId: string }) {
 	return db
 		.prepare(
-			`SELECT ${COMMENT_COLUMNS} FROM comments WHERE questionId = ? ORDER BY createdAt ASC`,
+			`SELECT ${COMMENT_COLUMNS} FROM comments c LEFT JOIN users u ON u.id = c.authorId WHERE c.questionId = ? ORDER BY c.createdAt ASC`,
 		)
 		.all(args.questionId);
 }
@@ -834,7 +948,7 @@ function adminGetState(db: Db, args: { token?: string }) {
 	if (args.token) {
 		const user = db
 			.prepare(
-				"SELECT id AS _id, email, name, sessionToken, role, createdAt AS _creationTime FROM users WHERE sessionToken = ?",
+				"SELECT id AS _id, email, name, avatarUrl, sessionToken, role, createdAt AS _creationTime FROM users WHERE sessionToken = ?",
 			)
 			.get(args.token) as Record<string, any> | undefined;
 		if (user) {
@@ -1161,6 +1275,9 @@ const handlers: Record<string, Handler> = {
 	"auth:forgotPassword": authForgotPassword,
 	"auth:resetPassword": authResetPassword,
 	"users:getByToken": usersGetByToken,
+	"users:updateProfile": usersUpdateProfile,
+	"users:changePassword": usersChangePassword,
+	"users:getPublicProfile": usersGetPublicProfile,
 	"topics:getBySlug": topicsGetBySlug,
 	"topics:getAll": topicsGetAll,
 	"units:getByCode": unitsGetByCode,

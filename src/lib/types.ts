@@ -8,6 +8,7 @@ export type Doc<T extends string> = {
 export type UserDoc = Doc<"users"> & {
 	email: string;
 	name: string;
+	avatarUrl?: string;
 	sessionToken?: string;
 	role: "user" | "admin";
 };
@@ -60,6 +61,7 @@ export type CommentDoc = Doc<"comments"> & {
 	content: string;
 	authorId: Id<"users">;
 	authorName: string;
+	avatarUrl?: string;
 	parentId?: Id<"notes">;
 	questionId?: Id<"questions">;
 	parentCommentId?: Id<"comments">;

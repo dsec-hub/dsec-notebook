@@ -16,6 +16,7 @@ function createSchema(database: DatabaseSync) {
       name TEXT NOT NULL,
       sessionToken TEXT,
       passwordHash TEXT,
+      avatarUrl TEXT,
       role TEXT NOT NULL DEFAULT 'user',
       createdAt INTEGER NOT NULL
     );
@@ -230,6 +231,9 @@ function migrate(database: DatabaseSync) {
 	}
 	if (!columns.some((c) => c.name === "role")) {
 		database.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'");
+	}
+	if (!columns.some((c) => c.name === "avatarUrl")) {
+		database.exec("ALTER TABLE users ADD COLUMN avatarUrl TEXT");
 	}
 
 	const unitColumns = database.prepare("PRAGMA table_info(units)").all() as { name: string }[];

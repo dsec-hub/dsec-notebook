@@ -172,7 +172,10 @@
 				{/if}
 				{#if !editMode}
 					<p class="kicker mt-3">
-						{question.authorName} · {timeAgo(question.createdAt)}
+						<a href={`/users/${question.authorId}`} class="hover:text-primary"
+							>{question.authorName}</a
+						>
+						· {timeAgo(question.createdAt)}
 						{#if isAuthor}
 							·
 							<button

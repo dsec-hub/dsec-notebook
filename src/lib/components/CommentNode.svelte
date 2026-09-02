@@ -4,6 +4,7 @@
 	import { get } from "svelte/store";
 	import { timeAgo } from "$lib/time";
 	import CommentNode from "./CommentNode.svelte";
+	import Avatar from "./Avatar.svelte";
 	import type { CommentDoc } from "$lib/types";
 
 	interface CommentTreeNode {
@@ -133,9 +134,15 @@
 
 <div class="py-3">
 	<div class="flex gap-3">
+		<a href={`/users/${comment.authorId}`} aria-label={`View ${comment.authorName}'s profile`}>
+			<Avatar src={comment.avatarUrl} name={comment.authorName} />
+		</a>
 		<div class="min-w-0 flex-1">
 			<p class="kicker">
-				{comment.authorName} · <span class="text-faint">{timeAgo(comment.createdAt)}</span>
+				<a href={`/users/${comment.authorId}`} class="hover:text-primary"
+					>{comment.authorName}</a
+				>
+				· <span class="text-faint">{timeAgo(comment.createdAt)}</span>
 				{#if edited}
 					· Edited
 				{/if}

@@ -186,7 +186,10 @@
 				{/if}
 				{#if !editMode}
 					<p class="kicker mt-3">
-						{note.authorName} · {timeAgo(note.createdAt)}
+						<a href={`/users/${note.authorId}`} class="hover:text-primary"
+							>{note.authorName}</a
+						>
+						· {timeAgo(note.createdAt)}
 						{#if isAuthor}
 							·
 							<button
