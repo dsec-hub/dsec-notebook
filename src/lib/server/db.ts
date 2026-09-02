@@ -100,6 +100,13 @@ function createSchema(database: DatabaseSync) {
       createdAt INTEGER NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS verification_request_limits (
+      identifier TEXT PRIMARY KEY,
+      requestCount INTEGER NOT NULL DEFAULT 0,
+      windowStartedAt INTEGER NOT NULL,
+      blockedUntil INTEGER NOT NULL DEFAULT 0
+    );
+
     CREATE INDEX IF NOT EXISTS idx_notes_topic ON notes(topicId);
     CREATE INDEX IF NOT EXISTS idx_notes_unit ON notes(unitId);
     CREATE INDEX IF NOT EXISTS idx_notes_created ON notes(createdAt);
