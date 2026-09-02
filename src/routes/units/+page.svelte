@@ -3,6 +3,7 @@
 	import { onMount } from "svelte";
 	import FeedRow from "$lib/components/FeedRow.svelte";
 	import UnitRail from "$lib/components/UnitRail.svelte";
+	import { postPath } from "$lib/paths";
 	import { timeAgo } from "$lib/time";
 	import type { NoteDoc, QuestionDoc, UnitDoc } from "$lib/types";
 
@@ -70,13 +71,18 @@
 		{#if selectedUnit}
 			<div class="pt-6">
 				<div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-					<h2 class="text-ink font-serif text-2xl font-medium">
+					<a
+						href={`/${selectedUnit.code}`}
+						class="text-ink hover:text-primary font-serif text-2xl font-medium"
+					>
 						{selectedUnit.code}{selectedUnit.code2 ? ` / ${selectedUnit.code2}` : ""}
-					</h2>
+					</a>
 					<p class="text-muted text-sm">{selectedUnit.name}</p>
 				</div>
 				{#if selectedUnit.description}
-					<p class="text-muted mt-1 text-sm">{selectedUnit.description}</p>
+					<p class="text-muted mt-1 text-sm">
+						{selectedUnit.description}
+					</p>
 				{/if}
 
 				{#if contentLoading}
@@ -86,7 +92,7 @@
 						<p class="kicker border-rule mt-8 border-t pt-8">Notes</p>
 						{#each notes as note}
 							<FeedRow
-								href="/notes/{note._id}"
+								href={postPath(selectedUnit.code, note._id)}
 								title={note.title}
 								unitCode={selectedUnit.code +
 									(selectedUnit.code2 ? ` / ${selectedUnit.code2}` : "")}
@@ -106,7 +112,7 @@
 						<p class="kicker border-rule mt-8 border-t pt-8">Questions</p>
 						{#each questions as question}
 							<FeedRow
-								href="/questions/{question._id}"
+								href={postPath(selectedUnit.code, question._id)}
 								title={question.title}
 								unitCode={selectedUnit.code +
 									(selectedUnit.code2 ? ` / ${selectedUnit.code2}` : "")}

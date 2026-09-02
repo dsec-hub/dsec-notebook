@@ -3,6 +3,7 @@
 	import { onMount } from "svelte";
 	import FeedRow from "$lib/components/FeedRow.svelte";
 	import UnitFilter from "$lib/components/UnitFilter.svelte";
+	import { postPath } from "$lib/paths";
 	import { timeAgo } from "$lib/time";
 	import type { NoteDoc, UnitDoc } from "$lib/types";
 
@@ -79,7 +80,7 @@
 	{:else}
 		{#each visible as note}
 			<FeedRow
-				href="/notes/{note._id}"
+				href={postPath(note.unit!.code, note._id)}
 				title={note.title}
 				unitCode={note.unit
 					? note.unit.code + (note.unit.code2 ? ` / ${note.unit.code2}` : "")

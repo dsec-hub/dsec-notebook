@@ -2,6 +2,7 @@
 	import { query } from "$lib/api";
 	import { onMount } from "svelte";
 	import FeedRow from "$lib/components/FeedRow.svelte";
+	import { postPath } from "$lib/paths";
 	import { timeAgo } from "$lib/time";
 	import type { SearchResult } from "$lib/types";
 
@@ -51,8 +52,11 @@
 		{#each results as result}
 			{#if result.type === "note"}
 				<FeedRow
-					href="/notes/{result._id}"
+					href={postPath(result.unit!.code, result._id)}
 					title={result.title}
+					unitCode={result.unit
+						? result.unit.code + (result.unit.code2 ? ` / ${result.unit.code2}` : "")
+						: undefined}
 					meta="{result.authorName} · {timeAgo(
 						result.createdAt,
 					)} · {result.commentCount} comment{result.commentCount === 1 ? '' : 's'}"
@@ -63,8 +67,11 @@
 				/>
 			{:else}
 				<FeedRow
-					href="/questions/{result._id}"
+					href={postPath(result.unit!.code, result._id)}
 					title={result.title}
+					unitCode={result.unit
+						? result.unit.code + (result.unit.code2 ? ` / ${result.unit.code2}` : "")
+						: undefined}
 					meta="{result.authorName} · {timeAgo(
 						result.createdAt,
 					)} · {result.answerCount} answer{result.answerCount === 1 ? '' : 's'}"

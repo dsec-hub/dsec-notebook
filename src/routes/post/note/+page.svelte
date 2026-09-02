@@ -5,6 +5,7 @@
 	import { onMount } from "svelte";
 	import { get } from "svelte/store";
 	import MarkdownEditor from "$lib/components/MarkdownEditor.svelte";
+	import { postPath } from "$lib/paths";
 	import type { TopicDoc, UnitDoc } from "$lib/types";
 
 	let topics: TopicDoc[] = $state([]);
@@ -51,16 +52,19 @@
 		loading = true;
 		try {
 			let unitId = selectedUnitId;
+			let unitCode = units.find((unit) => unit._id === unitId)?.code ?? "";
 			if (useCustomUnit && customUnit.trim()) {
-				const existing = units.find(
-					(u) => u.code.toLowerCase() === customUnit.trim().toUpperCase(),
+				unitCode = customUnit.trim().toUpperCase();
+				const existing = units.find((u) =>
+					[u.code, u.code2].some((code) => code?.toUpperCase() === unitCode),
 				);
 				if (existing) {
 					unitId = existing._id;
+					unitCode = existing.code;
 				} else {
 					unitId = (await mutation("units:createCustom", {
-						code: customUnit.trim().toUpperCase(),
-						name: customUnit.trim().toUpperCase(),
+						code: unitCode,
+						name: unitCode,
 					})) as string;
 				}
 			}
@@ -73,7 +77,7 @@
 				unitId,
 			})) as string;
 
-			goto(`/notes/${id}`);
+			goto(postPath(unitCode, id));
 		} catch (err: any) {
 			error = err.message ?? "Failed to publish note";
 		} finally {

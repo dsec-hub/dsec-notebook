@@ -3,6 +3,7 @@
 	import { page } from "$app/state";
 	import { onMount } from "svelte";
 	import FeedRow from "$lib/components/FeedRow.svelte";
+	import { postPath } from "$lib/paths";
 	import { timeAgo } from "$lib/time";
 	import type { NoteDoc, QuestionDoc, UnitDoc } from "$lib/types";
 
@@ -48,7 +49,7 @@
 			<p class="kicker border-rule mt-10 border-t pt-8">Notes</p>
 			{#each notes as note}
 				<FeedRow
-					href="/notes/{note._id}"
+					href={postPath(unit.code, note._id)}
 					title={note.title}
 					unitCode={unit.code + (unit.code2 ? ` / ${unit.code2}` : "")}
 					meta="{note.authorName} · {timeAgo(
@@ -65,7 +66,7 @@
 			<p class="kicker border-rule mt-10 border-t pt-8">Questions</p>
 			{#each questions as question}
 				<FeedRow
-					href="/questions/{question._id}"
+					href={postPath(unit.code, question._id)}
 					title={question.title}
 					unitCode={unit.code + (unit.code2 ? ` / ${unit.code2}` : "")}
 					meta="{question.authorName} · {timeAgo(

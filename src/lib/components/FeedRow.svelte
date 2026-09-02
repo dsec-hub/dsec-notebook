@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { unitPath } from "$lib/paths";
 	import VoteStack from "./VoteStack.svelte";
 
 	let {
@@ -24,20 +25,21 @@
 
 <article class="border-rule flex gap-4 border-b py-5">
 	<VoteStack count={voteCount} {targetType} {targetId} />
-	<a {href} class="group min-w-0 flex-1">
+	<div class="group min-w-0 flex-1">
 		{#if tag}
 			<p class="text-secondary mb-1 text-[10px] font-semibold tracking-[0.16em] uppercase">
 				{tag}
 			</p>
 		{/if}
 		{#if unitCode}
-			<p class="kicker">{unitCode}</p>
+			<a href={unitPath(unitCode.split(" / ")[0])} class="kicker">{unitCode}</a><br />
 		{/if}
-		<h3
-			class="text-ink group-hover:text-primary mt-1 font-sans text-[15px] leading-snug font-semibold"
+		<a
+			{href}
+			class="text-ink hover:text-primary mt-1 font-sans text-[15px] leading-snug font-semibold"
 		>
 			{title}
-		</h3>
+		</a>
 		<p class="kicker mt-1.5">{meta}</p>
-	</a>
+	</div>
 </article>

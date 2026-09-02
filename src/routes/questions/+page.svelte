@@ -3,6 +3,7 @@
 	import { onMount } from "svelte";
 	import FeedRow from "$lib/components/FeedRow.svelte";
 	import UnitFilter from "$lib/components/UnitFilter.svelte";
+	import { postPath } from "$lib/paths";
 	import { timeAgo } from "$lib/time";
 	import type { QuestionDoc, UnitDoc } from "$lib/types";
 
@@ -86,7 +87,7 @@
 	{:else}
 		{#each visible as question}
 			<FeedRow
-				href="/questions/{question._id}"
+				href={postPath(question.unit!.code, question._id)}
 				title={question.title}
 				unitCode={question.unit
 					? question.unit.code + (question.unit.code2 ? ` / ${question.unit.code2}` : "")
