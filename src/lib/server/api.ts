@@ -88,6 +88,21 @@ function mapQuestion(row: Record<string, any>): Record<string, any> {
 	return { ...row, solved: !!row.solved };
 }
 
+function addUnits(db: Db, rows: Record<string, any>[]): Record<string, any>[] {
+	const units = new Map<string, Record<string, any>>();
+	const getUnit = db.prepare(
+		"SELECT id AS _id, code, code2, name, description FROM units WHERE id = ?",
+	);
+
+	return rows.map((row) => {
+		if (!units.has(row.unitId)) {
+			const unit = getUnit.get(row.unitId) as Record<string, any> | undefined;
+			if (unit) units.set(row.unitId, unit);
+		}
+		return { ...row, unit: units.get(row.unitId) ?? null };
+	});
+}
+
 // ---- users ----
 
 function issueSession(db: Db, user: { _id: string; name: string; role?: string }) {
@@ -375,22 +390,31 @@ function notesCreate(
 function notesList(db: Db, args: { topicId?: string; unitId?: string; limit?: number }) {
 	const limit = args.limit ?? 50;
 	if (args.topicId) {
-		return db
-			.prepare(
-				`SELECT ${NOTE_COLUMNS} FROM notes WHERE topicId = ? ORDER BY createdAt DESC LIMIT ?`,
-			)
-			.all(args.topicId, limit);
+		return addUnits(
+			db,
+			db
+				.prepare(
+					`SELECT ${NOTE_COLUMNS} FROM notes WHERE topicId = ? ORDER BY createdAt DESC LIMIT ?`,
+				)
+				.all(args.topicId, limit) as Record<string, any>[],
+		);
 	}
 	if (args.unitId) {
-		return db
-			.prepare(
-				`SELECT ${NOTE_COLUMNS} FROM notes WHERE unitId = ? ORDER BY createdAt DESC LIMIT ?`,
-			)
-			.all(args.unitId, limit);
+		return addUnits(
+			db,
+			db
+				.prepare(
+					`SELECT ${NOTE_COLUMNS} FROM notes WHERE unitId = ? ORDER BY createdAt DESC LIMIT ?`,
+				)
+				.all(args.unitId, limit) as Record<string, any>[],
+		);
 	}
-	return db
-		.prepare(`SELECT ${NOTE_COLUMNS} FROM notes ORDER BY createdAt DESC LIMIT ?`)
-		.all(limit);
+	return addUnits(
+		db,
+		db
+			.prepare(`SELECT ${NOTE_COLUMNS} FROM notes ORDER BY createdAt DESC LIMIT ?`)
+			.all(limit) as Record<string, any>[],
+	);
 }
 
 function notesSearch(db: Db, args: { query: string; limit?: number }) {
@@ -398,10 +422,13 @@ function notesSearch(db: Db, args: { query: string; limit?: number }) {
 		.prepare(`SELECT ${NOTE_COLUMNS} FROM notes ORDER BY createdAt DESC LIMIT ?`)
 		.all(args.limit ?? 200) as Record<string, any>[];
 	const q = args.query.toLowerCase();
-	return all.filter(
-		(n) =>
-			String(n.title).toLowerCase().includes(q) ||
-			String(n.content).toLowerCase().includes(q),
+	return addUnits(
+		db,
+		all.filter(
+			(n) =>
+				String(n.title).toLowerCase().includes(q) ||
+				String(n.content).toLowerCase().includes(q),
+		),
 	);
 }
 
@@ -499,7 +526,7 @@ function questionsList(db: Db, args: { topicId?: string; unitId?: string; limit?
 						)
 						.all(limit)
 	) as Record<string, any>[];
-	return rows.map(mapQuestion);
+	return addUnits(db, rows.map(mapQuestion));
 }
 
 function questionsGetById(db: Db, args: { id: string }) {
@@ -514,13 +541,16 @@ function questionsSearch(db: Db, args: { query: string; limit?: number }) {
 		.prepare(`SELECT ${QUESTION_COLUMNS} FROM questions ORDER BY createdAt DESC LIMIT ?`)
 		.all(args.limit ?? 200) as Record<string, any>[];
 	const q = args.query.toLowerCase();
-	return all
-		.filter(
-			(qr) =>
-				String(qr.title).toLowerCase().includes(q) ||
-				String(qr.content).toLowerCase().includes(q),
-		)
-		.map(mapQuestion);
+	return addUnits(
+		db,
+		all
+			.filter(
+				(qr) =>
+					String(qr.title).toLowerCase().includes(q) ||
+					String(qr.content).toLowerCase().includes(q),
+			)
+			.map(mapQuestion),
+	);
 }
 
 function searchAll(db: Db, args: { query: string; limit?: number }) {

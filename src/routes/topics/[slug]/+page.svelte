@@ -3,6 +3,7 @@
 	import { page } from "$app/state";
 	import { onMount } from "svelte";
 	import FeedRow from "$lib/components/FeedRow.svelte";
+	import { postPath } from "$lib/paths";
 	import { timeAgo } from "$lib/time";
 	import type { NoteDoc, QuestionDoc, TopicDoc } from "$lib/types";
 
@@ -45,8 +46,11 @@
 			<p class="kicker border-rule mt-10 border-t pt-8">Notes</p>
 			{#each notes as note}
 				<FeedRow
-					href="/notes/{note._id}"
+					href={postPath(note.unit!.code, note._id)}
 					title={note.title}
+					unitCode={note.unit
+						? note.unit.code + (note.unit.code2 ? ` / ${note.unit.code2}` : "")
+						: undefined}
 					meta="{note.authorName} · {timeAgo(
 						note.createdAt,
 					)} · {note.commentCount} comment{note.commentCount === 1 ? '' : 's'}"
@@ -61,8 +65,12 @@
 			<p class="kicker border-rule mt-10 border-t pt-8">Questions</p>
 			{#each questions as question}
 				<FeedRow
-					href="/questions/{question._id}"
+					href={postPath(question.unit!.code, question._id)}
 					title={question.title}
+					unitCode={question.unit
+						? question.unit.code +
+							(question.unit.code2 ? ` / ${question.unit.code2}` : "")
+						: undefined}
 					meta="{question.authorName} · {timeAgo(
 						question.createdAt,
 					)} · {question.answerCount} answer{question.answerCount === 1 ? '' : 's'}"

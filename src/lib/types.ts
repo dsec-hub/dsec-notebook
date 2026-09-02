@@ -36,6 +36,7 @@ export type NoteDoc = Doc<"notes"> & {
 	updatedAt: number;
 	voteCount: number;
 	commentCount: number;
+	unit?: UnitDoc;
 };
 
 export type QuestionDoc = Doc<"questions"> & {
@@ -50,6 +51,7 @@ export type QuestionDoc = Doc<"questions"> & {
 	voteCount: number;
 	answerCount: number;
 	solved: boolean;
+	unit?: UnitDoc;
 };
 
 export type SearchResult = (NoteDoc & { type: "note" }) | (QuestionDoc & { type: "question" });

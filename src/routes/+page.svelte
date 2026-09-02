@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { query } from "$lib/api";
+	import { unitPath } from "$lib/paths";
 	import { onMount } from "svelte";
 	import type { UnitDoc } from "$lib/types";
 
@@ -49,7 +50,7 @@
 		{:else}
 			<div class="unit-rail">
 				{#each units as unit}
-					<a href="/units/{unit.code}" class="unit-card group flex flex-col gap-1">
+					<a href={unitPath(unit.code)} class="unit-card group flex flex-col gap-1">
 						<span
 							class="text-ink group-hover:text-primary font-serif text-base leading-tight"
 							>{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}</span

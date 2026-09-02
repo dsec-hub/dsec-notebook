@@ -44,7 +44,9 @@
 	});
 
 	async function reloadComments() {
-		const updated = await query("details:getNoteWithDetails", { id: page.params.id });
+		const updated = await query("details:getNoteWithDetails", {
+			id: page.params.id,
+		});
 		if (updated) comments = (updated as any).comments ?? [];
 	}
 
@@ -123,7 +125,9 @@
 				title: editTitle.trim(),
 				content: editContent.trim(),
 			});
-			const updated = await query("details:getNoteWithDetails", { id: note._id });
+			const updated = await query("details:getNoteWithDetails", {
+				id: note._id,
+			});
 			if (updated) {
 				note = updated as NoteDoc;
 				topic = (updated as any).topic ?? null;
@@ -150,13 +154,19 @@
 		<div class="flex gap-5">
 			<VoteStack count={note.voteCount} targetType="note" targetId={note._id} />
 			<div class="min-w-0 flex-1">
-				<p class="kicker">
-					{#if unit}{unit.code}{unit.code2
-							? ` / ${unit.code2}`
-							: ""}{/if}{#if unit && topic}
-						·
-					{/if}{#if topic}{topic.name}{/if}
-				</p>
+				<div class="kicker">
+					{#if unit}
+						<a href={`/${unit.code}`} class="hover:text-primary">
+							{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}
+						</a>
+					{/if}
+					{#if unit && topic}
+						{" · "}
+					{/if}
+					{#if topic}
+						{topic.name}
+					{/if}
+				</div>
 				{#if editMode}
 					<input
 						type="text"
