@@ -83,7 +83,7 @@
 	</svg>
 {/snippet}
 
-<div class="flex items-center gap-x-1 gap-y-2 overflow-x-scroll scrollbar-thin pb-2">
+<div class="flex scrollbar-thin items-center gap-x-1 gap-y-2 overflow-x-scroll pb-2">
 	<button
 		type="button"
 		class="chip {selectedUnitId === '' ? 'chip-active' : ''}"
