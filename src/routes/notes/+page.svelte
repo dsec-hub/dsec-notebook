@@ -82,6 +82,7 @@
 			<FeedRow
 				href={postPath(note.unit!.code, note._id)}
 				title={note.title}
+				content={note.content}
 				unitCode={note.unit
 					? note.unit.code + (note.unit.code2 ? ` / ${note.unit.code2}` : "")
 					: undefined}
