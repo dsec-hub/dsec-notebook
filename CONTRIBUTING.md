@@ -9,12 +9,12 @@ DSEC Notebook is a centralised resource hub for Deakin University students study
 If you would like to contribute, check out the types of contributions we accept and their corresponding sections in this guide:
 
 - **Code contributions**
-  - [Bug fixes](#report-issues-and-bugs)
-  - [New features](#share-ideas)
-  - [Tests](#best-practices)
+    - [Bug fixes](#report-issues-and-bugs)
+    - [New features](#share-ideas)
+    - [Tests](#best-practices)
 - **Documentation and design**
-  - [Documentation](#content-style-guide)
-  - [UI/UX improvements](#content-style-guide)
+    - [Documentation](#content-style-guide)
+    - [UI/UX improvements](#content-style-guide)
 
 However, at this time, we do not accept the following contributions:
 
