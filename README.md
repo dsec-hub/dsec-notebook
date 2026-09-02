@@ -1,5 +1,12 @@
 # DSEC Notebook
 
+![Svelte](https://img.shields.io/badge/sveltekit-%23f1413d.svg?style=for-the-badge&logo=svelte&logoColor=white)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+
+[Live site](https://notebook.dsec.club/)
+
 A centralised resource hub for Deakin University students studying **SIT** (IT, computer science, and cybersecurity) and **Mathematics** units. Students can share study notes, ask questions, and browse content organised by unit and topic.
 
 > Written by students, for students. This project is not affiliated with Deakin University.
