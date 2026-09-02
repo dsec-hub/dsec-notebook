@@ -1,6 +1,8 @@
 <script lang="ts">
-	import { isAuthenticated, initAuth, logout, currentUser } from "$lib/stores/auth";
+	import { isAuthenticated, initAuth, currentUser } from "$lib/stores/auth";
 	import { theme, toggleTheme } from "$lib/stores/theme";
+	import Avatar from "./Avatar.svelte";
+	import type { UserDoc } from "$lib/types";
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
@@ -9,6 +11,7 @@
 	let resourcesOpen = $state(false);
 	let auth = $state(false);
 	let admin = $state(false);
+	let navUser: UserDoc | null = $state(null);
 	let searchQuery = $state("");
 	let isDark = $state(false);
 
@@ -24,7 +27,10 @@
 	onMount(() => {
 		initAuth();
 		const unsubAuth = isAuthenticated.subscribe((v) => (auth = v));
-		const unsubUser = currentUser.subscribe((u) => (admin = u?.role === "admin"));
+		const unsubUser = currentUser.subscribe((u) => {
+			navUser = u;
+			admin = u?.role === "admin";
+		});
 		const unsubTheme = theme.subscribe((t) => (isDark = t === "dark"));
 		return () => {
 			unsubAuth();
@@ -39,6 +45,7 @@
 	const onQuestions = $derived(path === "/questions" || path.startsWith("/questions/"));
 	const onResources = $derived(onUnits || onNotes || onQuestions);
 	const onAdmin = $derived(path === "/admin" || path.startsWith("/admin/"));
+	const onAccount = $derived(path === "/account");
 </script>
 
 <header class="border-rule bg-surface border-b">
@@ -99,18 +106,14 @@
 			{#if admin}
 				<a href="/admin" class="nav-link {onAdmin ? 'nav-link-active' : ''}">Admin</a>
 			{/if}
-			{#if auth}
-				<button
-					type="button"
-					class="nav-link"
-					onclick={() => {
-						if (!confirm("Sign out?")) return;
-						logout();
-						goto("/");
-					}}
+			{#if auth && navUser}
+				<a
+					href="/account"
+					class="hover:ring-primary rounded-full ring-offset-2 ring-offset-(--color-surface) transition hover:ring-2"
+					aria-label="Open account"
 				>
-					Sign out
-				</button>
+					<Avatar src={navUser.avatarUrl} name={navUser.name} size="sm" />
+				</a>
 			{:else}
 				<a href="/auth/login" class="nav-link">Sign in</a>
 			{/if}
@@ -162,21 +165,28 @@
 			</form>
 		</nav>
 
-		<button
-			class="text-muted hover:text-ink p-1 md:hidden"
-			aria-label="Open menu"
-			onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
-		>
-			<svg
-				class="h-5 w-5"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke="currentColor"
-				stroke-width="1.5"
+		<div class="flex items-center gap-3 md:hidden">
+			{#if auth && navUser}
+				<a href="/account" aria-label="Open account">
+					<Avatar src={navUser.avatarUrl} name={navUser.name} size="sm" />
+				</a>
+			{/if}
+			<button
+				class="text-muted hover:text-ink p-1"
+				aria-label="Open menu"
+				onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
 			>
-				<path stroke-linecap="square" d="M4 7h16M4 12h16M4 17h16" />
-			</svg>
-		</button>
+				<svg
+					class="h-5 w-5"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+					stroke-width="1.5"
+				>
+					<path stroke-linecap="square" d="M4 7h16M4 12h16M4 17h16" />
+				</svg>
+			</button>
+		</div>
 	</div>
 
 	{#if mobileMenuOpen}
@@ -204,20 +214,7 @@
 					>Admin</a
 				>
 			{/if}
-			{#if auth}
-				<button
-					type="button"
-					class="nav-link block"
-					onclick={() => {
-						if (!confirm("Sign out?")) return;
-						logout();
-						goto("/");
-						mobileMenuOpen = false;
-					}}
-				>
-					Sign out
-				</button>
-			{:else}
+			{#if !auth}
 				<a
 					href="/auth/login"
 					class="nav-link block"

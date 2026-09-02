@@ -90,6 +90,11 @@ export function getToken(): string | null {
 	}
 }
 
+export function setCurrentUser(user: UserDoc) {
+	currentUser.set(user);
+	isAuthenticated.set(true);
+}
+
 export function logout() {
 	localStorage.removeItem(STORAGE_KEY);
 	currentUser.set(null);
