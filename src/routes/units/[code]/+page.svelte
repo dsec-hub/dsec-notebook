@@ -1,31 +1,71 @@
 <script lang="ts">
-	import { query } from "$lib/api";
+	import { mutation, query } from "$lib/api";
 	import { page } from "$app/state";
 	import { onMount } from "svelte";
+	import { get } from "svelte/store";
 	import FeedRow from "$lib/components/FeedRow.svelte";
 	import { postPath } from "$lib/paths";
+	import { getToken, initAuth, isAuthenticated } from "$lib/stores/auth";
 	import { timeAgo } from "$lib/time";
 	import type { NoteDoc, QuestionDoc, UnitDoc } from "$lib/types";
 
-	let unit: UnitDoc | null = $state(null);
+	const MAX_PINS = 10;
+
+	let unit = $state<UnitDoc | null>(null);
 	let notes: NoteDoc[] = $state([]);
 	let questions: QuestionDoc[] = $state([]);
 	let loading = $state(true);
+	let authed = $state(false);
+	let pinnedIds = $state<string[]>([]);
+	let pinBusy = $state(false);
+	let pinError = $state("");
+
+	const isPinned = $derived(unit ? pinnedIds.includes(unit._id) : false);
+	const canPin = $derived(isPinned || pinnedIds.length < MAX_PINS);
 
 	onMount(async () => {
+		await initAuth();
+		authed = get(isAuthenticated);
+		const token = getToken();
+
 		const code = page.params.code;
 		const u = await query("units:getByCode", { code });
 		unit = u as UnitDoc;
 		if (unit) {
-			const [n, q] = await Promise.all([
+			const [n, q, pins] = await Promise.all([
 				query("notes:list", { unitId: unit._id }),
 				query("questions:list", { unitId: unit._id }),
+				token ? query("units:getPinned", { token }) : Promise.resolve([]),
 			]);
 			notes = n as NoteDoc[];
 			questions = q as QuestionDoc[];
+			pinnedIds = pins as string[];
 		}
 		loading = false;
 	});
+
+	async function togglePin() {
+		if (!unit) return;
+
+		const token = getToken();
+		if (!token) {
+			pinError = "Sign in to pin units";
+			return;
+		}
+
+		pinBusy = true;
+		pinError = "";
+		try {
+			pinnedIds = (await mutation(isPinned ? "units:unpin" : "units:pin", {
+				token,
+				unitId: unit._id,
+			})) as string[];
+		} catch (err: any) {
+			pinError = err?.message ?? "Failed to update pin";
+		} finally {
+			pinBusy = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -37,12 +77,48 @@
 		<p class="kicker py-16">Loading</p>
 	{:else if unit}
 		<p class="kicker"><a href="/" class="hover:text-primary">Home</a> · Unit</p>
-		<h1 class="text-ink mt-2 font-serif text-4xl font-medium">
-			{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}
-		</h1>
+		<div class="mt-2 flex items-center gap-2">
+			<h1 class="text-ink font-serif text-4xl font-medium">
+				{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}
+			</h1>
+			{#if authed}
+				<button
+					type="button"
+					class="pin-btn {isPinned ? 'pin-btn-active' : ''}"
+					onclick={togglePin}
+					disabled={pinBusy || !canPin}
+					title={isPinned
+						? "Unpin unit"
+						: canPin
+							? "Pin unit"
+							: "You can pin up to 10 units"}
+					aria-label={isPinned ? "Unpin unit" : "Pin unit"}
+				>
+					<svg
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true"
+					>
+						<path d="M12 17v5"></path>
+						<path
+							d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16h14v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"
+						></path>
+					</svg>
+				</button>
+			{/if}
+		</div>
 		<p class="text-muted mt-1 text-[15px]">{unit.name}</p>
 		{#if unit.description}
 			<p class="text-muted mt-2 text-sm">{unit.description}</p>
+		{/if}
+		{#if pinError}
+			<p class="text-primary mt-2 text-xs">{pinError}</p>
 		{/if}
 
 		{#if notes.length > 0}
