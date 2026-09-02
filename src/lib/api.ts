@@ -19,3 +19,16 @@ export function query(name: string, args: Record<string, any> = {}): Promise<any
 export function mutation(name: string, args: Record<string, any> = {}): Promise<any> {
 	return call(name, args);
 }
+
+export async function uploadImage(token: string, file: File): Promise<string> {
+	const form = new FormData();
+	form.append("token", token);
+	form.append("file", file);
+
+	const res = await fetch("/api/upload", { method: "POST", body: form });
+	const data = await res.json().catch(() => null);
+	if (!res.ok || !data?.ok) {
+		throw new Error(data?.error ?? `Upload failed (${res.status})`);
+	}
+	return data.result.url as string;
+}

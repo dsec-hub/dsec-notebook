@@ -25,7 +25,8 @@ WORKDIR /app
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=3000 \
-    DATABASE_PATH=data/dsec.db
+    DATABASE_PATH=data/dsec.db \
+    BODY_SIZE_LIMIT=15728640
 
 COPY --from=build /app/build ./build
 COPY --from=build /app/package.json ./package.json
