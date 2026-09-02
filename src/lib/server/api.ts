@@ -1128,3 +1128,8 @@ export async function call(fn: string, args: Record<string, any> = {}): Promise<
 	if (!handler) throw new Error(`Unknown function: ${fn}`);
 	return await handler(getDb(), args ?? {});
 }
+
+export function getUserByToken(token: string): Record<string, any> | null {
+	if (!token) return null;
+	return usersGetByToken(getDb(), { token });
+}

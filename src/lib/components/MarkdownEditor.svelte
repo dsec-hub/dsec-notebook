@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { tick } from "svelte";
 	import Markdown from "./Markdown.svelte";
+	import { getToken } from "$lib/stores/auth";
+	import { uploadImage } from "$lib/api";
 
 	let {
 		content = $bindable(""),
@@ -15,7 +17,10 @@
 	} = $props();
 
 	let textarea: HTMLTextAreaElement | undefined = $state();
+	let fileInput: HTMLInputElement | undefined = $state();
 	let mode = $state<"write" | "preview">("write");
+	let uploading = $state(false);
+	let uploadError = $state("");
 
 	function selection(): { start: number; end: number; text: string } {
 		if (!textarea) return { start: content.length, end: content.length, text: "" };
@@ -102,6 +107,64 @@
 			};
 		});
 	}
+
+	function insertText(text: string) {
+		applyEdit((value, start, end) => {
+			const next = value.slice(0, start) + text + value.slice(end);
+			return { value: next, start: start + text.length, end: start + text.length };
+		});
+	}
+
+	async function uploadFiles(files: File[]) {
+		const token = getToken();
+		if (!token) {
+			uploadError = "Please sign in to upload images";
+			return;
+		}
+
+		uploading = true;
+		uploadError = "";
+		try {
+			const urls: string[] = [];
+			for (const file of files) {
+				urls.push(await uploadImage(token, file));
+			}
+			insertText(urls.map((url) => `![image](${url})`).join("\n\n"));
+		} catch (err: any) {
+			uploadError = err?.message ?? "Failed to upload image";
+		} finally {
+			uploading = false;
+		}
+	}
+
+	function pickImages() {
+		fileInput?.click();
+	}
+
+	async function onFilesSelected(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const files = input.files ? Array.from(input.files) : [];
+		if (files.length > 0) await uploadFiles(files);
+		input.value = "";
+	}
+
+	function handlePaste(event: ClipboardEvent) {
+		const data = event.clipboardData;
+		if (!data) return;
+
+		const files: File[] = [];
+		for (let i = 0; i < data.items.length; i++) {
+			const item = data.items[i];
+			if (item.kind === "file") {
+				const file = item.getAsFile();
+				if (file && file.type.startsWith("image/")) files.push(file);
+			}
+		}
+		if (files.length === 0) return;
+
+		event.preventDefault();
+		void uploadFiles(files);
+	}
 </script>
 
 <div>
@@ -109,21 +172,19 @@
 		<label for="markdown-editor" class="kicker mb-2 block">{label}</label>
 	{/if}
 
-	<div class="border-l border-t border-r border-rule w-fit">
+	<div class="border-rule w-fit border-t border-r border-l">
 		<button
 			type="button"
 			class="{mode === 'write'
 				? 'text-primary'
-				: 'hover:text-primary'} text-sm px-2 py-2 border-r border-rule"
+				: 'hover:text-primary'} border-rule border-r px-2 py-2 text-sm"
 			onclick={() => (mode = "write")}
 		>
 			Write
 		</button>
 		<button
 			type="button"
-			class="{mode === 'preview'
-				? 'text-primary'
-				: 'hover:text-primary'} text-sm px-2 py-2"
+			class="{mode === 'preview' ? 'text-primary' : 'hover:text-primary'} px-2 py-2 text-sm"
 			onclick={() => (mode = "preview")}
 		>
 			Preview
@@ -158,6 +219,29 @@
 				H
 			</button>
 			<button type="button" class="editor-tool" title="Link" onclick={insertLink}>🔗</button>
+			<button
+				type="button"
+				class="editor-tool"
+				title="Insert image"
+				onclick={pickImages}
+				disabled={uploading}
+			>
+				<svg
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					aria-hidden="true"
+				>
+					<rect x="3" y="3" width="18" height="18" rx="2"></rect>
+					<circle cx="8.5" cy="8.5" r="1.5"></circle>
+					<path d="M21 15l-5-5L5 21"></path>
+				</svg>
+			</button>
 			<button type="button" class="editor-tool" title="Code block" onclick={insertCodeBlock}>
 				{`{ }`}
 			</button>
@@ -184,11 +268,26 @@
 			bind:value={content}
 			{rows}
 			{placeholder}
+			onpaste={handlePaste}
 			class="field resize-y"></textarea>
+		<input
+			bind:this={fileInput}
+			type="file"
+			accept="image/*"
+			multiple
+			class="hidden"
+			onchange={onFilesSelected}
+		/>
 		<p class="text-faint mt-2 text-xs">
 			Markdown supported: **bold**, _italic_, `code`, [links](url), lists, quotes and code
-			blocks.
+			blocks. Paste or insert images to embed them.
 		</p>
+		{#if uploading}
+			<p class="text-muted mt-1 text-xs">Uploading image...</p>
+		{/if}
+		{#if uploadError}
+			<p class="text-primary mt-1 text-xs">{uploadError}</p>
+		{/if}
 	{:else}
 		<div
 			class="border-rule bg-surface text-ink min-h-40 rounded-sm border px-3 py-2.5 text-sm leading-relaxed"

@@ -125,7 +125,7 @@ button {
 }
 
 .thread-branch {
-	@apply w-3 shrink-0 cursor-pointer self-stretch border-l-2 border-rule transition hover:border-secondary hover:brightness-150;
+	@apply border-rule hover:border-secondary w-3 shrink-0 cursor-pointer self-stretch border-l-2 transition hover:brightness-150;
 }
 
 .markdown {

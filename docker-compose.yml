@@ -5,6 +5,7 @@ services:
             - "4073:3000"
         environment:
             DATABASE_PATH: data/dsec.db
+            BODY_SIZE_LIMIT: 15728640
             RESEND_API_KEY: ${RESEND_API_KEY:-}
             RESEND_FROM: ${RESEND_FROM:-DSEC Notebook <onboarding@resend.dev>}
         volumes:
