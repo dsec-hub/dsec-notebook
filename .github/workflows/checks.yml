@@ -29,3 +29,9 @@ jobs:
 
             - name: Svelte check
               run: npm run check
+
+            - name: Install Playwright browsers
+              run: npx playwright install --with-deps chromium
+
+            - name: Test
+              run: npm test
