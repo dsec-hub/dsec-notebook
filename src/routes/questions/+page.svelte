@@ -2,6 +2,7 @@
 	import { query } from "$lib/api";
 	import { onMount } from "svelte";
 	import FeedRow from "$lib/components/FeedRow.svelte";
+	import UnitFilter from "$lib/components/UnitFilter.svelte";
 	import { timeAgo } from "$lib/time";
 	import type { QuestionDoc, UnitDoc } from "$lib/types";
 
@@ -21,11 +22,6 @@
 		}));
 		units = u as UnitDoc[];
 		loading = false;
-	});
-
-	const usedUnits = $derived.by(() => {
-		const ids = new Set(questions.map((q) => q.unitId));
-		return units.filter((u) => ids.has(u._id));
 	});
 
 	const visible = $derived.by(() => {
@@ -66,24 +62,7 @@
 	</div>
 
 	<div class="border-rule flex flex-wrap items-center justify-between gap-4 border-b py-4">
-		<div class="flex flex-wrap gap-2">
-			<button
-				type="button"
-				class="chip {selectedUnitId === '' ? 'chip-active' : ''}"
-				onclick={() => (selectedUnitId = "")}
-			>
-				All units
-			</button>
-			{#each usedUnits as unit}
-				<button
-					type="button"
-					class="chip {selectedUnitId === unit._id ? 'chip-active' : ''}"
-					onclick={() => (selectedUnitId = unit._id)}
-				>
-					{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}
-				</button>
-			{/each}
-		</div>
+		<UnitFilter bind:selectedUnitId {units} />
 		<div class="flex gap-4">
 			<button
 				type="button"

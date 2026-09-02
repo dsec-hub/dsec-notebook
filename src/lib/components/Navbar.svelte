@@ -6,6 +6,7 @@
 	import { page } from "$app/state";
 
 	let mobileMenuOpen = $state(false);
+	let resourcesOpen = $state(false);
 	let auth = $state(false);
 	let admin = $state(false);
 	let searchQuery = $state("");
@@ -33,8 +34,10 @@
 	});
 
 	const path = $derived(page.url.pathname);
+	const onUnits = $derived(path === "/units" || path.startsWith("/units/"));
 	const onNotes = $derived(path === "/notes" || path.startsWith("/notes/"));
 	const onQuestions = $derived(path === "/questions" || path.startsWith("/questions/"));
+	const onResources = $derived(onUnits || onNotes || onQuestions);
 	const onAdmin = $derived(path === "/admin" || path.startsWith("/admin/"));
 </script>
 
@@ -43,10 +46,56 @@
 		<a href="/" class="text-ink font-serif text-[1.65rem] leading-none">Notebook</a>
 
 		<nav class="hidden items-center gap-8 md:flex">
-			<a href="/notes" class="nav-link {onNotes ? 'nav-link-active' : ''}">Notes</a>
-			<a href="/questions" class="nav-link {onQuestions ? 'nav-link-active' : ''}"
-				>Questions</a
-			>
+			<div class="relative">
+				<button
+					type="button"
+					class="nav-link relative z-20 flex items-center gap-1 {onResources
+						? 'nav-link-active'
+						: ''}"
+					aria-haspopup="true"
+					aria-expanded={resourcesOpen}
+					onclick={() => (resourcesOpen = !resourcesOpen)}
+				>
+					Resources
+					<svg
+						class="h-3 w-3 transition-transform {resourcesOpen ? 'rotate-180' : ''}"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						aria-hidden="true"
+					>
+						<path stroke-linecap="square" d="m6 9 6 6 6-6" />
+					</svg>
+				</button>
+				{#if resourcesOpen}
+					<button
+						type="button"
+						class="fixed inset-0 z-10 cursor-default"
+						aria-label="Close menu"
+						onclick={() => (resourcesOpen = false)}
+					></button>
+					<div
+						class="border-rule bg-surface absolute top-full left-0 z-20 mt-2 w-44 rounded-sm border py-1 shadow-lg"
+					>
+						<a
+							href="/units"
+							class="nav-link block px-4 py-2 {onUnits ? 'nav-link-active' : ''}"
+							onclick={() => (resourcesOpen = false)}>Units</a
+						>
+						<a
+							href="/notes"
+							class="nav-link block px-4 py-2 {onNotes ? 'nav-link-active' : ''}"
+							onclick={() => (resourcesOpen = false)}>Notes</a
+						>
+						<a
+							href="/questions"
+							class="nav-link block px-4 py-2 {onQuestions ? 'nav-link-active' : ''}"
+							onclick={() => (resourcesOpen = false)}>Questions</a
+						>
+					</div>
+				{/if}
+			</div>
 			{#if admin}
 				<a href="/admin" class="nav-link {onAdmin ? 'nav-link-active' : ''}">Admin</a>
 			{/if}
@@ -141,6 +190,9 @@
 					class="border-rule text-ink placeholder:text-faint focus:border-primary bg-surface w-full rounded-sm border px-3 py-2 text-sm tracking-wide transition-colors outline-none"
 				/>
 			</form>
+			<a href="/units" class="nav-link block" onclick={() => (mobileMenuOpen = false)}
+				>Units</a
+			>
 			<a href="/notes" class="nav-link block" onclick={() => (mobileMenuOpen = false)}
 				>Notes</a
 			>

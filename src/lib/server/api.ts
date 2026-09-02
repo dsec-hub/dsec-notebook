@@ -283,6 +283,56 @@ function unitsCreateCustom(db: Db, args: { code: string; name: string }) {
 	return id;
 }
 
+// ---- pinned units ----
+
+const MAX_PINNED_UNITS = 10;
+
+function getPinnedUnitIds(db: Db, userId: string): string[] {
+	return (
+		db
+			.prepare("SELECT unitId FROM pinned_units WHERE userId = ? ORDER BY createdAt ASC")
+			.all(userId) as { unitId: string }[]
+	).map((row) => row.unitId);
+}
+
+function unitsGetPinned(db: Db, args: { token: string }) {
+	const user = requireAuth(db, args.token);
+	return getPinnedUnitIds(db, user._id);
+}
+
+function unitsPin(db: Db, args: { token: string; unitId: string }) {
+	const user = requireAuth(db, args.token);
+	const unit = db.prepare("SELECT id AS _id FROM units WHERE id = ?").get(args.unitId);
+	if (!unit) throw new Error("Unit not found");
+
+	const existing = db
+		.prepare("SELECT 1 AS found FROM pinned_units WHERE userId = ? AND unitId = ?")
+		.get(user._id, args.unitId);
+	if (!existing) {
+		const count = db
+			.prepare("SELECT COUNT(*) AS c FROM pinned_units WHERE userId = ?")
+			.get(user._id) as { c: number };
+		if (count.c >= MAX_PINNED_UNITS) {
+			throw new Error(`You can pin up to ${MAX_PINNED_UNITS} units`);
+		}
+		db.prepare("INSERT INTO pinned_units (userId, unitId, createdAt) VALUES (?, ?, ?)").run(
+			user._id,
+			args.unitId,
+			Date.now(),
+		);
+	}
+	return getPinnedUnitIds(db, user._id);
+}
+
+function unitsUnpin(db: Db, args: { token: string; unitId: string }) {
+	const user = requireAuth(db, args.token);
+	db.prepare("DELETE FROM pinned_units WHERE userId = ? AND unitId = ?").run(
+		user._id,
+		args.unitId,
+	);
+	return getPinnedUnitIds(db, user._id);
+}
+
 // ---- notes ----
 
 const NOTE_COLUMNS =
@@ -947,6 +997,7 @@ function adminUsersDelete(db: Db, args: { token: string; id: string }) {
 	db.exec("BEGIN");
 	try {
 		db.prepare("DELETE FROM votes WHERE userId = ?").run(args.id);
+		db.prepare("DELETE FROM pinned_units WHERE userId = ?").run(args.id);
 		for (const id of noteIds) {
 			db.prepare("DELETE FROM votes WHERE targetType = 'note' AND targetId = ?").run(id);
 			db.prepare("DELETE FROM comments WHERE parentId = ?").run(id);
@@ -1085,6 +1136,9 @@ const handlers: Record<string, Handler> = {
 	"units:getByCode": unitsGetByCode,
 	"units:getAll": unitsGetAll,
 	"units:createCustom": unitsCreateCustom,
+	"units:getPinned": unitsGetPinned,
+	"units:pin": unitsPin,
+	"units:unpin": unitsUnpin,
 	"notes:create": notesCreate,
 	"notes:list": notesList,
 	"notes:search": notesSearch,
