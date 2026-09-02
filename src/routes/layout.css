@@ -105,7 +105,7 @@ button {
 }
 
 .chip {
-	@apply border-rule text-ink hover:border-ink bg-surface inline-flex items-center rounded-sm border px-3 py-1.5 font-sans text-[11px] font-medium tracking-[0.12em] uppercase transition-colors;
+	@apply border-rule whitespace-nowrap text-ink hover:border-ink bg-surface inline-flex items-center rounded-sm border px-3 py-1.5 font-sans text-[11px] font-medium tracking-[0.12em] uppercase transition-colors;
 }
 
 .chip-active {
@@ -122,6 +122,30 @@ button {
 
 .editor-tool {
 	@apply text-ink hover:border-primary hover:text-primary bg-surface inline-flex h-8 min-w-8 items-center justify-center rounded-sm border border-transparent px-1.5 font-sans text-xs font-medium transition-colors;
+}
+
+.pin-btn {
+	@apply text-faint hover:text-ink ml-1 inline-flex h-7 w-7 items-center justify-center rounded-sm border border-transparent transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.pin-btn-active {
+	@apply text-primary hover:text-primary-dark;
+}
+
+.unit-rail {
+	@apply flex gap-3 overflow-x-scroll py-1 scrollbar-thin pb-2;
+}
+
+.unit-rail::-webkit-scrollbar {
+	display: none;
+}
+
+.unit-card {
+	@apply border-rule bg-surface hover:border-ink relative w-44 shrink-0 rounded-sm border p-3 transition-colors;
+}
+
+.unit-card-active {
+	@apply border-primary hover:border-primary;
 }
 
 .thread-branch {

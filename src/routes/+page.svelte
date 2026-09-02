@@ -47,16 +47,15 @@
 		{:else if error}
 			<p class="kicker">{error}</p>
 		{:else}
-			<div class="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-5">
+			<div class="unit-rail">
 				{#each units as unit}
-					<a
-						href="/units/{unit.code}"
-						class="group border-rule flex items-baseline justify-between gap-4 border-b py-3"
-					>
-						<span class="text-ink group-hover:text-primary font-serif text-lg"
+					<a href="/units/{unit.code}" class="unit-card group flex flex-col gap-1">
+						<span
+							class="text-ink group-hover:text-primary font-serif text-base leading-tight"
 							>{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}</span
 						>
-						<span class="text-muted truncate text-sm">{unit.name}</span>
+						<span class="text-muted line-clamp-2 text-xs leading-snug">{unit.name}</span
+						>
 					</a>
 				{/each}
 			</div>

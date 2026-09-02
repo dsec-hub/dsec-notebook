@@ -84,6 +84,13 @@ function createSchema(database: DatabaseSync) {
       value INTEGER NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS pinned_units (
+      userId TEXT NOT NULL,
+      unitId TEXT NOT NULL,
+      createdAt INTEGER NOT NULL,
+      PRIMARY KEY (userId, unitId)
+    );
+
     CREATE TABLE IF NOT EXISTS email_verifications (
       email TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -102,6 +109,7 @@ function createSchema(database: DatabaseSync) {
     CREATE INDEX IF NOT EXISTS idx_comments_note ON comments(parentId);
     CREATE INDEX IF NOT EXISTS idx_comments_question ON comments(questionId);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_votes_user_target ON votes(userId, targetType, targetId);
+    CREATE INDEX IF NOT EXISTS idx_pinned_units_user ON pinned_units(userId);
   `);
 }
 
