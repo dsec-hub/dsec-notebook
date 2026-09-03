@@ -469,9 +469,12 @@ const NOTE_COLUMNS =
 
 function notesCreate(
 	db: Db,
-	args: { token: string; title: string; content: string; topicId: string; unitId: string },
+	args: { token: string; title: string; content: string; topicId?: string; unitId?: string },
 ) {
 	const user = requireAuth(db, args.token);
+	const topicId = args.topicId?.trim() ?? "";
+	const unitId = args.unitId?.trim() ?? "";
+	if (!topicId && !unitId) throw new Error("Select a topic or a unit");
 	const id = newId();
 	const now = Date.now();
 	db.exec("BEGIN");
@@ -479,17 +482,7 @@ function notesCreate(
 		db.prepare(
 			`INSERT INTO notes (id, title, content, topicId, unitId, authorId, authorName, createdAt, updatedAt, voteCount, commentCount)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0)`,
-		).run(
-			id,
-			args.title,
-			args.content,
-			args.topicId,
-			args.unitId,
-			user._id,
-			user.name,
-			now,
-			now,
-		);
+		).run(id, args.title, args.content, topicId, unitId, user._id, user.name, now, now);
 		db.prepare(
 			"INSERT INTO votes (id, userId, targetType, targetId, value) VALUES (?, ?, 'note', ?, 1)",
 		).run(newId(), user._id, id);
@@ -587,9 +580,12 @@ const QUESTION_COLUMNS =
 
 function questionsCreate(
 	db: Db,
-	args: { token: string; title: string; content: string; topicId: string; unitId: string },
+	args: { token: string; title: string; content: string; topicId?: string; unitId?: string },
 ) {
 	const user = requireAuth(db, args.token);
+	const topicId = args.topicId?.trim() ?? "";
+	const unitId = args.unitId?.trim() ?? "";
+	if (!topicId && !unitId) throw new Error("Select a topic or a unit");
 	const id = newId();
 	const now = Date.now();
 	db.exec("BEGIN");
@@ -597,17 +593,7 @@ function questionsCreate(
 		db.prepare(
 			`INSERT INTO questions (id, title, content, topicId, unitId, authorId, authorName, createdAt, updatedAt, voteCount, answerCount, solved)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, 0)`,
-		).run(
-			id,
-			args.title,
-			args.content,
-			args.topicId,
-			args.unitId,
-			user._id,
-			user.name,
-			now,
-			now,
-		);
+		).run(id, args.title, args.content, topicId, unitId, user._id, user.name, now, now);
 		db.prepare(
 			"INSERT INTO votes (id, userId, targetType, targetId, value) VALUES (?, ?, 'question', ?, 1)",
 		).run(newId(), user._id, id);

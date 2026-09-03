@@ -18,7 +18,9 @@
 		"lint:fix": "oxlint --fix"
 	},
 	"dependencies": {
+		"katex": "^0.18.5",
 		"markdown-it": "^15.0.1",
+		"markdown-it-texmath": "^1.0.0",
 		"resend": "^6.25.0"
 	},
 	"devDependencies": {

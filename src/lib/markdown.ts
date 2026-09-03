@@ -1,9 +1,20 @@
 import MarkdownIt from "markdown-it";
+import texmath from "markdown-it-texmath";
+import katex from "katex";
 
 const md = new MarkdownIt({
 	html: false,
 	linkify: true,
 	breaks: true,
+});
+
+md.use(texmath, {
+	engine: katex,
+	delimiters: ["dollars", "brackets"],
+	katexOptions: {
+		throwOnError: false,
+		output: "htmlAndMathml",
+	},
 });
 
 export function renderMarkdown(source: string): string {
@@ -14,7 +25,6 @@ export function previewMarkdown(source: string, maxLength = 180): string {
 	const text = md
 		.parse(source ?? "", {})
 		.map((token) => {
-			console.log(token);
 			if (token.type === "inline") {
 				return (token.children ?? [])
 					.filter((child) => child.type !== "image")

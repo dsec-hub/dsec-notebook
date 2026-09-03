@@ -38,8 +38,9 @@
 			error = "Title and content are required";
 			return;
 		}
-		if (!selectedTopicId) {
-			error = "Please select a topic";
+		const hasUnit = useCustomUnit ? !!customUnit.trim() : !!selectedUnitId;
+		if (!selectedTopicId && !hasUnit) {
+			error = "Please select a topic or a unit";
 			return;
 		}
 
@@ -51,7 +52,7 @@
 
 		loading = true;
 		try {
-			let unitId = selectedUnitId;
+			let unitId = useCustomUnit ? "" : selectedUnitId;
 			let unitCode = units.find((unit) => unit._id === unitId)?.code ?? "";
 			if (useCustomUnit && customUnit.trim()) {
 				unitCode = customUnit.trim().toUpperCase();
@@ -77,7 +78,7 @@
 				unitId,
 			})) as string;
 
-			goto(postPath(unitCode, id));
+			goto(unitCode ? postPath(unitCode, id) : `/notes/${id}`);
 		} catch (err: any) {
 			error = err.message ?? "Failed to publish note";
 		} finally {
@@ -92,9 +93,7 @@
 
 <div class="page">
 	<h1 class="text-ink font-serif text-4xl font-medium">Post a note</h1>
-	<p class="text-muted mt-2 mb-10 text-[15px]">
-		Share study notes with the Deakin community. Focus on a specific topic, not an entire unit.
-	</p>
+	<p class="text-muted mt-2 mb-10 text-[15px]">Share study notes with the Deakin community.</p>
 
 	<form onsubmit={handleSubmit} class="border-rule space-y-6 border-t pt-8">
 		<div>
@@ -118,49 +117,52 @@
 			/>
 		</div>
 
-		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-			<div>
-				<label for="topic" class="kicker mb-2 block">Topic</label>
-				<select id="topic" bind:value={selectedTopicId} class="field" required>
-					<option value="">Select a topic...</option>
-					{#each topics as topic}
-						<option value={topic._id}>{topic.name}</option>
-					{/each}
-				</select>
-			</div>
-
-			<div>
-				<label for="unit" class="kicker mb-2 block">Unit</label>
-				{#if !useCustomUnit}
-					<select id="unit" bind:value={selectedUnitId} class="field">
-						<option value="">Select a unit...</option>
-						{#each units as unit}
-							<option value={unit._id}
-								>{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""} — {unit.name}</option
-							>
+		<div>
+			<p class="text-muted mb-3 text-xs">Choose at least one topic or unit.</p>
+			<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+				<div>
+					<label for="topic" class="kicker mb-2 block">Topic (optional)</label>
+					<select id="topic" bind:value={selectedTopicId} class="field">
+						<option value="">Select a topic...</option>
+						{#each topics as topic}
+							<option value={topic._id}>{topic.name}</option>
 						{/each}
 					</select>
-				{/if}
+				</div>
 
-				<button
-					type="button"
-					onclick={() => {
-						useCustomUnit = !useCustomUnit;
-						customUnit = "";
-					}}
-					class="text-secondary hover:text-secondary-dark mt-2 text-xs"
-				>
-					{useCustomUnit ? "Choose from list" : "Other unit..."}
-				</button>
+				<div>
+					<label for="unit" class="kicker mb-2 block">Unit</label>
+					{#if !useCustomUnit}
+						<select id="unit" bind:value={selectedUnitId} class="field">
+							<option value="">Select a unit...</option>
+							{#each units as unit}
+								<option value={unit._id}
+									>{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""} — {unit.name}</option
+								>
+							{/each}
+						</select>
+					{/if}
 
-				{#if useCustomUnit}
-					<input
-						type="text"
-						bind:value={customUnit}
-						placeholder="e.g., SIT384"
-						class="field mt-2"
-					/>
-				{/if}
+					<button
+						type="button"
+						onclick={() => {
+							useCustomUnit = !useCustomUnit;
+							customUnit = "";
+						}}
+						class="text-secondary hover:text-secondary-dark mt-2 text-xs"
+					>
+						{useCustomUnit ? "Choose from list" : "Other unit..."}
+					</button>
+
+					{#if useCustomUnit}
+						<input
+							type="text"
+							bind:value={customUnit}
+							placeholder="e.g., SIT384"
+							class="field mt-2"
+						/>
+					{/if}
+				</div>
 			</div>
 		</div>
 
