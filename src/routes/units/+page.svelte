@@ -1,52 +1,19 @@
 <script lang="ts">
 	import { query } from "$lib/api";
+	import { unitPath } from "$lib/paths";
 	import { onMount } from "svelte";
-	import FeedRow from "$lib/components/FeedRow.svelte";
-	import UnitRail from "$lib/components/UnitRail.svelte";
-	import { postPath } from "$lib/paths";
-	import { timeAgo } from "$lib/time";
-	import type { NoteDoc, QuestionDoc, UnitDoc } from "$lib/types";
+	import type { UnitDoc } from "$lib/types";
 
 	let units: UnitDoc[] = $state([]);
-	let notes: NoteDoc[] = $state([]);
-	let questions: QuestionDoc[] = $state([]);
 	let loading = $state(true);
-	let contentLoading = $state(false);
-	let selectedUnitId = $state("");
-
-	const selectedUnit = $derived(units.find((u) => u._id === selectedUnitId) ?? null);
 
 	onMount(async () => {
 		try {
 			units = (await query("units:getAll")) as UnitDoc[];
-			selectedUnitId = units[0]?._id ?? "";
 		} finally {
 			loading = false;
 		}
 	});
-
-	$effect(() => {
-		loadContent(selectedUnitId);
-	});
-
-	async function loadContent(id: string) {
-		if (!id) {
-			notes = [];
-			questions = [];
-			return;
-		}
-		contentLoading = true;
-		try {
-			const [n, q] = await Promise.all([
-				query("notes:list", { unitId: id }),
-				query("questions:list", { unitId: id }),
-			]);
-			notes = n as NoteDoc[];
-			questions = q as QuestionDoc[];
-		} finally {
-			contentLoading = false;
-		}
-	}
 </script>
 
 <svelte:head>
@@ -63,92 +30,23 @@
 
 	{#if loading}
 		<p class="kicker py-16">Loading</p>
+	{:else if units.length === 0}
+		<p class="text-muted py-16 text-sm">No units yet.</p>
 	{:else}
-		<div class="border-rule border-b py-5">
-			<UnitRail {units} bind:selectedUnitId />
-		</div>
-
-		{#if selectedUnit}
-			<div class="pt-6">
-				<div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-					<a
-						href={`/${selectedUnit.code}`}
-						class="text-ink hover:text-primary font-serif text-2xl font-medium"
+		<div class="grid grid-cols-1 gap-3 pt-6 sm:grid-cols-2 lg:grid-cols-3">
+			{#each units as unit (unit._id)}
+				<a href={unitPath(unit.code)} class="unit-card flex h-full w-full flex-col gap-2">
+					<span class="text-ink font-serif text-base leading-tight"
+						>{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}</span
 					>
-						{selectedUnit.code}{selectedUnit.code2 ? ` / ${selectedUnit.code2}` : ""}
-					</a>
-					<p class="text-muted text-sm">{selectedUnit.name}</p>
-				</div>
-				{#if selectedUnit.description}
-					<p class="text-muted mt-1 text-sm">
-						{selectedUnit.description}
-					</p>
-				{/if}
-
-				{#if contentLoading}
-					<p class="kicker py-16">Loading</p>
-				{:else}
-					{#if notes.length > 0}
-						<p class="kicker border-rule mt-8 border-t pt-8">Notes</p>
-						{#each notes as note}
-							<FeedRow
-								href={postPath(selectedUnit.code, note._id)}
-								title={note.title}
-								content={note.content}
-								unitCode={selectedUnit.code +
-									(selectedUnit.code2 ? ` / ${selectedUnit.code2}` : "")}
-								meta="{note.authorName} · {timeAgo(
-									note.createdAt,
-								)} · {note.commentCount} comment{note.commentCount === 1
-									? ''
-									: 's'}"
-								voteCount={note.voteCount}
-								targetType="note"
-								targetId={note._id}
-							/>
-						{/each}
+					<span class="text-ink text-sm leading-snug">{unit.name}</span>
+					{#if unit.description}
+						<p class="text-muted line-clamp-3 text-xs leading-snug">
+							{unit.description}
+						</p>
 					{/if}
-
-					{#if questions.length > 0}
-						<p class="kicker border-rule mt-8 border-t pt-8">Questions</p>
-						{#each questions as question}
-							<FeedRow
-								href={postPath(selectedUnit.code, question._id)}
-								title={question.title}
-								content={question.content}
-								unitCode={selectedUnit.code +
-									(selectedUnit.code2 ? ` / ${selectedUnit.code2}` : "")}
-								meta="{question.authorName} · {timeAgo(
-									question.createdAt,
-								)} · {question.answerCount} answer{question.answerCount === 1
-									? ''
-									: 's'}"
-								voteCount={question.voteCount}
-								targetType="question"
-								targetId={question._id}
-							/>
-						{/each}
-					{/if}
-
-					{#if notes.length === 0 && questions.length === 0}
-						<p class="text-muted mt-8 text-sm">No content for this unit yet.</p>
-						<div class="mt-4 flex gap-4">
-							<a
-								href="/post/note"
-								class="text-secondary hover:text-secondary-dark text-sm"
-								>Post a note</a
-							>
-							<a
-								href="/post/question"
-								class="text-secondary hover:text-secondary-dark text-sm"
-								>Ask a question</a
-							>
-						</div>
-					{/if}
-				{/if}
-			</div>
-		{:else}
-			<p class="text-muted py-16 text-sm">Select a unit to see its notes and questions.</p>
-		{/if}
+				</a>
+			{/each}
+		</div>
 	{/if}
 </div>

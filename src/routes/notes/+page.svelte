@@ -10,7 +10,7 @@
 	let notes: (NoteDoc & { unit?: UnitDoc })[] = $state([]);
 	let units: UnitDoc[] = $state([]);
 	let loading = $state(true);
-	let selectedUnitId = $state("");
+	let selectedUnitIds: string[] = $state([]);
 	let sort = $state<"newest" | "top">("newest");
 	let searchQuery = $state("");
 
@@ -24,7 +24,10 @@
 
 	const visible = $derived.by(() => {
 		const q = searchQuery.trim().toLowerCase();
-		let list = selectedUnitId ? notes.filter((n) => n.unitId === selectedUnitId) : notes;
+		let list =
+			selectedUnitIds.length > 0
+				? notes.filter((n) => selectedUnitIds.includes(n.unitId))
+				: notes;
 		if (q) {
 			list = list.filter(
 				(n) => n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q),
@@ -56,7 +59,7 @@
 	</div>
 
 	<div class="border-rule flex flex-wrap items-center justify-between gap-4 border-b py-4">
-		<UnitFilter bind:selectedUnitId {units} />
+		<UnitFilter bind:selectedUnitIds {units} />
 		<div class="flex gap-4">
 			<button
 				type="button"
