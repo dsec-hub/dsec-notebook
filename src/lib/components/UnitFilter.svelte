@@ -9,10 +9,10 @@
 
 	let {
 		units,
-		selectedUnitId = $bindable(""),
+		selectedUnitIds = $bindable([]),
 	}: {
 		units: UnitDoc[];
-		selectedUnitId?: string;
+		selectedUnitIds?: string[];
 	} = $props();
 
 	let pinnedIds = $state<string[]>([]);
@@ -40,6 +40,12 @@
 	const otherUnits = $derived(units.filter((u) => !pinnedIds.includes(u._id)));
 
 	const canPinMore = $derived(pinnedIds.length < MAX_PINS);
+
+	function toggleUnit(unitId: string) {
+		selectedUnitIds = selectedUnitIds.includes(unitId)
+			? selectedUnitIds.filter((id) => id !== unitId)
+			: [...selectedUnitIds, unitId];
+	}
 
 	async function togglePin(unit: UnitDoc) {
 		const token = getToken();
@@ -84,20 +90,13 @@
 {/snippet}
 
 <div class="flex scrollbar-thin items-center gap-x-1 gap-y-2 overflow-x-scroll pb-2">
-	<button
-		type="button"
-		class="chip {selectedUnitId === '' ? 'chip-active' : ''}"
-		onclick={() => (selectedUnitId = "")}
-	>
-		All units
-	</button>
-
 	{#each pinnedUnits as unit (unit._id)}
 		<span class="inline-flex items-center">
 			<button
 				type="button"
-				class="chip {selectedUnitId === unit._id ? 'chip-active' : ''}"
-				onclick={() => (selectedUnitId = unit._id)}
+				class="chip {selectedUnitIds.includes(unit._id) ? 'chip-active' : ''}"
+				aria-pressed={selectedUnitIds.includes(unit._id)}
+				onclick={() => toggleUnit(unit._id)}
 			>
 				{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}
 			</button>
@@ -118,8 +117,9 @@
 		<span class="inline-flex items-center">
 			<button
 				type="button"
-				class="chip {selectedUnitId === unit._id ? 'chip-active' : ''}"
-				onclick={() => (selectedUnitId = unit._id)}
+				class="chip {selectedUnitIds.includes(unit._id) ? 'chip-active' : ''}"
+				aria-pressed={selectedUnitIds.includes(unit._id)}
+				onclick={() => toggleUnit(unit._id)}
 			>
 				{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}
 			</button>

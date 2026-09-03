@@ -10,7 +10,7 @@
 	let questions: (QuestionDoc & { unit?: UnitDoc })[] = $state([]);
 	let units: UnitDoc[] = $state([]);
 	let loading = $state(true);
-	let selectedUnitId = $state("");
+	let selectedUnitIds: string[] = $state([]);
 	let sort = $state<"newest" | "top">("newest");
 	let searchQuery = $state("");
 
@@ -27,8 +27,8 @@
 
 	const visible = $derived.by(() => {
 		const q = searchQuery.trim().toLowerCase();
-		let list = selectedUnitId
-			? questions.filter((q) => q.unitId === selectedUnitId)
+		let list = selectedUnitIds.length
+			? questions.filter((question) => selectedUnitIds.includes(question.unitId))
 			: questions;
 		if (q) {
 			list = list.filter(
@@ -63,7 +63,7 @@
 	</div>
 
 	<div class="border-rule flex flex-wrap items-center justify-between gap-4 border-b py-4">
-		<UnitFilter bind:selectedUnitId {units} />
+		<UnitFilter bind:selectedUnitIds {units} />
 		<div class="flex gap-4">
 			<button
 				type="button"
