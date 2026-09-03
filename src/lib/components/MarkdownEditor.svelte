@@ -108,6 +108,20 @@
 		});
 	}
 
+	function insertMathBlock() {
+		const { start, end, text } = selection();
+		const formula = text || "x^2 + y^2 = z^2";
+		applyEdit((value) => {
+			const insertion = `$$\n${formula}\n$$`;
+			const next = value.slice(0, start) + insertion + value.slice(end);
+			return {
+				value: next,
+				start: start + 3,
+				end: start + 3 + formula.length,
+			};
+		});
+	}
+
 	function insertText(text: string) {
 		applyEdit((value, start, end) => {
 			const next = value.slice(0, start) + text + value.slice(end);
@@ -212,6 +226,22 @@
 			</button>
 			<button
 				type="button"
+				class="editor-tool font-serif italic"
+				title="Inline equation"
+				onclick={() => wrap("$")}
+			>
+				x²
+			</button>
+			<button
+				type="button"
+				class="editor-tool font-serif italic"
+				title="Display equation"
+				onclick={insertMathBlock}
+			>
+				∑
+			</button>
+			<button
+				type="button"
 				class="editor-tool"
 				title="Heading"
 				onclick={() => prefixLines("## ")}
@@ -280,7 +310,8 @@
 		/>
 		<p class="text-faint mt-2 text-xs">
 			Markdown supported: **bold**, _italic_, `code`, [links](url), lists, quotes and code
-			blocks. Paste or insert images to embed them.
+			blocks. LaTeX equations use $inline$ or $$display$$ notation. Paste or insert images to
+			embed them.
 		</p>
 		{#if uploading}
 			<p class="text-muted mt-1 text-xs">Uploading image...</p>
