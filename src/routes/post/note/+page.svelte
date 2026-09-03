@@ -5,6 +5,7 @@
 	import { onMount } from "svelte";
 	import { get } from "svelte/store";
 	import MarkdownEditor from "$lib/components/MarkdownEditor.svelte";
+	import SearchSelect from "$lib/components/SearchSelect.svelte";
 	import { postPath } from "$lib/paths";
 	import type { TopicDoc, UnitDoc } from "$lib/types";
 
@@ -18,6 +19,20 @@
 	let useCustomUnit = $state(false);
 	let error = $state("");
 	let loading = $state(false);
+
+	const topicOptions = $derived(
+		topics.map((topic) => ({
+			value: topic._id,
+			label: topic.name,
+		})),
+	);
+	const unitOptions = $derived(
+		units.map((unit) => ({
+			value: unit._id,
+			label: `${unit.code}${unit.code2 ? ` / ${unit.code2}` : ""} — ${unit.name}`,
+			searchText: `${unit.code} ${unit.code2 ?? ""} ${unit.name}`,
+		})),
+	);
 
 	onMount(async () => {
 		await initAuth();
@@ -122,25 +137,25 @@
 			<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
 				<div>
 					<label for="topic" class="kicker mb-2 block">Topic (optional)</label>
-					<select id="topic" bind:value={selectedTopicId} class="field">
-						<option value="">Select a topic...</option>
-						{#each topics as topic}
-							<option value={topic._id}>{topic.name}</option>
-						{/each}
-					</select>
+					<SearchSelect
+						id="topic"
+						bind:value={selectedTopicId}
+						options={topicOptions}
+						placeholder="Select a topic..."
+						searchPlaceholder="Search topics..."
+					/>
 				</div>
 
 				<div>
 					<label for="unit" class="kicker mb-2 block">Unit</label>
 					{#if !useCustomUnit}
-						<select id="unit" bind:value={selectedUnitId} class="field">
-							<option value="">Select a unit...</option>
-							{#each units as unit}
-								<option value={unit._id}
-									>{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""} — {unit.name}</option
-								>
-							{/each}
-						</select>
+						<SearchSelect
+							id="unit"
+							bind:value={selectedUnitId}
+							options={unitOptions}
+							placeholder="Select a unit..."
+							searchPlaceholder="Search units..."
+						/>
 					{/if}
 
 					<button
