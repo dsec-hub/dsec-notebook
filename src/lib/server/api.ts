@@ -88,6 +88,20 @@ function mapQuestion(row: Record<string, any>): Record<string, any> {
 	return { ...row, solved: !!row.solved };
 }
 
+function unitRecordMatchesQuery(unit: Record<string, any> | null | undefined, q: string) {
+	if (!unit) return false;
+	return (
+		String(unit.code).toLowerCase().includes(q) ||
+		String(unit.code2 ?? "")
+			.toLowerCase()
+			.includes(q) ||
+		String(unit.name).toLowerCase().includes(q) ||
+		String(unit.description ?? "")
+			.toLowerCase()
+			.includes(q)
+	);
+}
+
 function addUnits(db: Db, rows: Record<string, any>[]): Record<string, any>[] {
 	const units = new Map<string, Record<string, any>>();
 	const getUnit = db.prepare(
@@ -529,13 +543,11 @@ function notesSearch(db: Db, args: { query: string; limit?: number }) {
 		.prepare(`SELECT ${NOTE_COLUMNS} FROM notes ORDER BY createdAt DESC LIMIT ?`)
 		.all(args.limit ?? 200) as Record<string, any>[];
 	const q = args.query.toLowerCase();
-	return addUnits(
-		db,
-		all.filter(
-			(n) =>
-				String(n.title).toLowerCase().includes(q) ||
-				String(n.content).toLowerCase().includes(q),
-		),
+	return addUnits(db, all).filter(
+		(n) =>
+			String(n.title).toLowerCase().includes(q) ||
+			String(n.content).toLowerCase().includes(q) ||
+			unitRecordMatchesQuery(n.unit, q),
 	);
 }
 
@@ -641,27 +653,31 @@ function questionsSearch(db: Db, args: { query: string; limit?: number }) {
 		.prepare(`SELECT ${QUESTION_COLUMNS} FROM questions ORDER BY createdAt DESC LIMIT ?`)
 		.all(args.limit ?? 200) as Record<string, any>[];
 	const q = args.query.toLowerCase();
-	return addUnits(
-		db,
-		all
-			.filter(
-				(qr) =>
-					String(qr.title).toLowerCase().includes(q) ||
-					String(qr.content).toLowerCase().includes(q),
-			)
-			.map(mapQuestion),
+	return addUnits(db, all.map(mapQuestion)).filter(
+		(qr) =>
+			String(qr.title).toLowerCase().includes(q) ||
+			String(qr.content).toLowerCase().includes(q) ||
+			unitRecordMatchesQuery(qr.unit, q),
 	);
+}
+
+function unitsSearch(db: Db, args: { query: string; limit?: number }) {
+	const q = args.query.toLowerCase();
+	const all = unitsGetAll(db) as Record<string, any>[];
+	return all.filter((unit) => unitRecordMatchesQuery(unit, q)).slice(0, args.limit ?? 200);
 }
 
 function searchAll(db: Db, args: { query: string; limit?: number }) {
 	const limit = args.limit ?? 200;
+	const units = unitsSearch(db, { query: args.query, limit }) as Record<string, any>[];
 	const notes = notesSearch(db, { query: args.query, limit }) as Record<string, any>[];
 	const questions = questionsSearch(db, { query: args.query, limit }) as Record<string, any>[];
-	const combined: Record<string, any>[] = [
+	const posts: Record<string, any>[] = [
 		...notes.map((n) => ({ ...n, type: "note" })),
 		...questions.map((q) => ({ ...q, type: "question" })),
 	];
-	return combined.sort((a, b) => b.createdAt - a.createdAt);
+	posts.sort((a, b) => b.createdAt - a.createdAt);
+	return [...units.map((unit) => ({ ...unit, type: "unit" })), ...posts];
 }
 
 function questionsMarkSolved(db: Db, args: { token: string; id: string }) {
@@ -1268,6 +1284,7 @@ const handlers: Record<string, Handler> = {
 	"topics:getAll": topicsGetAll,
 	"units:getByCode": unitsGetByCode,
 	"units:getAll": unitsGetAll,
+	"units:search": unitsSearch,
 	"units:createCustom": unitsCreateCustom,
 	"units:getPinned": unitsGetPinned,
 	"units:pin": unitsPin,

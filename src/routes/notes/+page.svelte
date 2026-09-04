@@ -4,6 +4,7 @@
 	import FeedRow from "$lib/components/FeedRow.svelte";
 	import UnitFilter from "$lib/components/UnitFilter.svelte";
 	import { postPath } from "$lib/paths";
+	import { unitMatchesQuery } from "$lib/search";
 	import { timeAgo } from "$lib/time";
 	import type { NoteDoc, UnitDoc } from "$lib/types";
 
@@ -30,7 +31,10 @@
 				: notes;
 		if (q) {
 			list = list.filter(
-				(n) => n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q),
+				(n) =>
+					n.title.toLowerCase().includes(q) ||
+					n.content.toLowerCase().includes(q) ||
+					(n.unit ? unitMatchesQuery(n.unit, q) : false),
 			);
 		}
 		if (sort === "top") list = [...list].sort((a, b) => b.voteCount - a.voteCount);
@@ -52,8 +56,8 @@
 		<input
 			type="search"
 			bind:value={searchQuery}
-			placeholder="Search notes..."
-			aria-label="Search notes"
+			placeholder="Search notes and units..."
+			aria-label="Search notes and units"
 			class="field"
 		/>
 	</div>
