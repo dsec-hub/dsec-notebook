@@ -55,7 +55,10 @@ export type QuestionDoc = Doc<"questions"> & {
 	unit?: UnitDoc;
 };
 
-export type SearchResult = (NoteDoc & { type: "note" }) | (QuestionDoc & { type: "question" });
+export type SearchResult =
+	| (NoteDoc & { type: "note" })
+	| (QuestionDoc & { type: "question" })
+	| (UnitDoc & { type: "unit" });
 
 export type CommentDoc = Doc<"comments"> & {
 	content: string;

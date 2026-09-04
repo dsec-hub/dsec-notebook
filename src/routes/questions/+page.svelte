@@ -4,6 +4,7 @@
 	import FeedRow from "$lib/components/FeedRow.svelte";
 	import UnitFilter from "$lib/components/UnitFilter.svelte";
 	import { postPath } from "$lib/paths";
+	import { unitMatchesQuery } from "$lib/search";
 	import { timeAgo } from "$lib/time";
 	import type { QuestionDoc, UnitDoc } from "$lib/types";
 
@@ -34,7 +35,8 @@
 			list = list.filter(
 				(question) =>
 					question.title.toLowerCase().includes(q) ||
-					question.content.toLowerCase().includes(q),
+					question.content.toLowerCase().includes(q) ||
+					(question.unit ? unitMatchesQuery(question.unit, q) : false),
 			);
 		}
 		if (sort === "top") list = [...list].sort((a, b) => b.voteCount - a.voteCount);
@@ -56,8 +58,8 @@
 		<input
 			type="search"
 			bind:value={searchQuery}
-			placeholder="Search questions..."
-			aria-label="Search questions"
+			placeholder="Search questions and units..."
+			aria-label="Search questions and units"
 			class="field"
 		/>
 	</div>

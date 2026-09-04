@@ -2,7 +2,7 @@
 	import { query } from "$lib/api";
 	import { onMount } from "svelte";
 	import FeedRow from "$lib/components/FeedRow.svelte";
-	import { postPath } from "$lib/paths";
+	import { postPath, unitPath } from "$lib/paths";
 	import { timeAgo } from "$lib/time";
 	import type { SearchResult } from "$lib/types";
 
@@ -19,6 +19,9 @@
 		}
 		loading = false;
 	});
+
+	const unitResults = $derived(results.filter((result) => result.type === "unit"));
+	const postResults = $derived(results.filter((result) => result.type !== "unit"));
 </script>
 
 <svelte:head>
@@ -41,7 +44,7 @@
 			id="q"
 			type="search"
 			bind:value={searchQuery}
-			placeholder="Search notes and questions..."
+			placeholder="Search units, notes, and questions..."
 			class="field"
 		/>
 	</form>
@@ -49,7 +52,29 @@
 	{#if loading}
 		<p class="kicker py-16">Loading</p>
 	{:else if ranQuery}
-		{#each results as result}
+		{#if unitResults.length > 0}
+			<p class="kicker mb-3">Units</p>
+			<div class="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+				{#each unitResults as unit (unit._id)}
+					<a
+						href={unitPath(unit.code)}
+						class="unit-card flex h-full w-full flex-col gap-2"
+					>
+						<span class="text-ink font-serif text-base leading-tight"
+							>{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}</span
+						>
+						<span class="text-ink text-sm leading-snug">{unit.name}</span>
+						{#if unit.description}
+							<p class="text-muted line-clamp-3 text-xs leading-snug">
+								{unit.description}
+							</p>
+						{/if}
+					</a>
+				{/each}
+			</div>
+		{/if}
+
+		{#each postResults as result}
 			{#if result.type === "note"}
 				<FeedRow
 					href={postPath(result.unit!.code, result._id)}
@@ -66,7 +91,7 @@
 					targetId={result._id}
 					tag="Note"
 				/>
-			{:else}
+			{:else if result.type === "question"}
 				<FeedRow
 					href={postPath(result.unit!.code, result._id)}
 					title={result.title}
@@ -84,7 +109,9 @@
 				/>
 			{/if}
 		{:else}
-			<p class="text-muted text-sm">No results found for “{searchQuery}”.</p>
+			{#if unitResults.length === 0}
+				<p class="text-muted text-sm">No results found for “{searchQuery}”.</p>
+			{/if}
 		{/each}
 	{/if}
 </div>

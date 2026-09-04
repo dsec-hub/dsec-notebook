@@ -19,9 +19,28 @@
 	let pinnedIds = $state<string[]>([]);
 	let pinBusy = $state(false);
 	let pinError = $state("");
+	let searchQuery = $state("");
 
 	const isPinned = $derived(unit ? pinnedIds.includes(unit._id) : false);
 	const canPin = $derived(isPinned || pinnedIds.length < MAX_PINS);
+
+	const visibleNotes = $derived.by(() => {
+		const q = searchQuery.trim().toLowerCase();
+		if (!q) return notes;
+		return notes.filter(
+			(note) =>
+				note.title.toLowerCase().includes(q) || note.content.toLowerCase().includes(q),
+		);
+	});
+	const visibleQuestions = $derived.by(() => {
+		const q = searchQuery.trim().toLowerCase();
+		if (!q) return questions;
+		return questions.filter(
+			(question) =>
+				question.title.toLowerCase().includes(q) ||
+				question.content.toLowerCase().includes(q),
+		);
+	});
 
 	onMount(async () => {
 		await initAuth();
@@ -121,9 +140,21 @@
 			<p class="text-primary mt-2 text-xs">{pinError}</p>
 		{/if}
 
-		{#if notes.length > 0}
-			<p class="kicker border-rule mt-10 border-t pt-8">Notes</p>
-			{#each notes as note}
+		{#if notes.length > 0 || questions.length > 0}
+			<div class="border-rule mt-8 border-t py-4">
+				<input
+					type="search"
+					bind:value={searchQuery}
+					placeholder="Search this unit..."
+					aria-label="Search this unit"
+					class="field"
+				/>
+			</div>
+		{/if}
+
+		{#if visibleNotes.length > 0}
+			<p class="kicker border-rule mt-6 border-t pt-8">Notes</p>
+			{#each visibleNotes as note}
 				<FeedRow
 					href={postPath(unit.code, note._id)}
 					title={note.title}
@@ -139,9 +170,9 @@
 			{/each}
 		{/if}
 
-		{#if questions.length > 0}
+		{#if visibleQuestions.length > 0}
 			<p class="kicker border-rule mt-10 border-t pt-8">Questions</p>
-			{#each questions as question}
+			{#each visibleQuestions as question}
 				<FeedRow
 					href={postPath(unit.code, question._id)}
 					title={question.title}
@@ -167,6 +198,10 @@
 					>Ask a question</a
 				>
 			</div>
+		{:else if searchQuery.trim() && visibleNotes.length === 0 && visibleQuestions.length === 0}
+			<p class="text-muted mt-6 text-sm">
+				No results in this unit for “{searchQuery.trim()}”.
+			</p>
 		{/if}
 	{:else}
 		<h1 class="text-ink font-serif text-3xl">Unit not found</h1>
