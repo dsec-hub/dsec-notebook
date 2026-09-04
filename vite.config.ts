@@ -37,7 +37,7 @@ export default defineConfig({
 				lang: "en",
 			},
 			pwaAssets: {
-				image: "static/dsec-logo.webp",
+				image: "static/dsec-logo-2.webp",
 				preset: "minimal-2023",
 				includeHtmlHeadLinks: false,
 				injectThemeColor: false,
