@@ -14,6 +14,26 @@ describe("renderMarkdown", () => {
 	it("renders invalid LaTeX as an error instead of throwing", () => {
 		expect(() => renderMarkdown("$\\notacommand{$")).not.toThrow();
 	});
+
+	it("syntax-highlights fenced code blocks", () => {
+		const rendered = renderMarkdown("```ts\nconst value: number = 1;\n```");
+
+		expect(rendered).toContain('class="code-block"');
+		expect(rendered).toContain('class="code-copy"');
+		expect(rendered).toContain('data-lang="ts"');
+		expect(rendered).toContain("hljs");
+		expect(rendered).toContain("hljs-keyword");
+		expect(rendered).not.toContain("code-lang");
+		expect(rendered).not.toContain("<script");
+	});
+
+	it("escapes unhighlighted fenced code", () => {
+		const rendered = renderMarkdown("```\n<div>&</div>\n```");
+
+		expect(rendered).toContain("&lt;div&gt;");
+		expect(rendered).toContain("&amp;");
+		expect(rendered).not.toContain("<div>");
+	});
 });
 
 describe("previewMarkdown", () => {

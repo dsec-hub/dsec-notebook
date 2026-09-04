@@ -18,6 +18,7 @@
 		"lint:fix": "oxlint --fix"
 	},
 	"dependencies": {
+		"highlight.js": "^11.12.0",
 		"katex": "^0.18.5",
 		"markdown-it": "^15.0.1",
 		"markdown-it-texmath": "^1.0.0",

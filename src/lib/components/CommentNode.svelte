@@ -5,6 +5,7 @@
 	import { timeAgo } from "$lib/time";
 	import CommentNode from "./CommentNode.svelte";
 	import Avatar from "./Avatar.svelte";
+	import Markdown from "./Markdown.svelte";
 	import type { CommentDoc } from "$lib/types";
 
 	interface CommentTreeNode {
@@ -165,9 +166,9 @@
 					<span class="text-primary text-xs">{editError}</span>
 				</div>
 			{:else}
-				<p class="text-ink mt-1 text-sm leading-relaxed whitespace-pre-wrap">
-					{comment.content}
-				</p>
+				<div class="text-ink mt-1 text-sm leading-relaxed">
+					<Markdown content={comment.content} />
+				</div>
 			{/if}
 
 			<div class="mt-2 flex items-center gap-3">

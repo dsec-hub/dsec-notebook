@@ -239,20 +239,155 @@ button {
 	font-size: 0.9em;
 }
 
-.markdown pre {
-	background: var(--color-ink);
-	color: var(--color-surface);
-	border-radius: 6px;
-	padding: 0.75rem 1rem;
-	overflow-x: auto;
-	margin: 0.75em 0;
+.markdown pre,
+.markdown pre.code-block {
+	--code-bg: color-mix(in srgb, var(--color-rule) 55%, var(--color-surface));
+	--code-fg: var(--color-ink);
+	--code-comment: var(--color-muted);
+	--code-keyword: var(--color-primary-dark);
+	--code-string: var(--color-secondary-dark);
+	--code-number: #b45309;
+	--code-title: var(--color-ink);
+	--code-attr: #6d28d9;
+	--code-built: var(--color-secondary-dark);
+	--code-meta: var(--color-muted);
+	position: relative;
+	background: var(--code-bg);
+	color: var(--code-fg);
+	border: 1px solid var(--color-rule);
+	border-radius: 8px;
+	padding: 2rem 1rem 0.9rem;
+	overflow: visible;
+	margin: 0.9em 0;
+	font-size: 0.85em;
+	line-height: 1.6;
 }
 
-.markdown pre code {
+.dark .markdown pre,
+.dark .markdown pre.code-block {
+	--code-bg: #0c0a0b;
+	--code-fg: #f3eef0;
+	--code-comment: #9a8f93;
+	--code-keyword: #ea4c65;
+	--code-string: #7fdfea;
+	--code-number: #f0b429;
+	--code-title: #f5d0d6;
+	--code-attr: #c9b8ff;
+	--code-built: #7fdfea;
+	--code-meta: #b3a8ac;
+	border-color: color-mix(in srgb, var(--color-rule) 70%, transparent);
+}
+
+.markdown pre .code-copy {
+	position: absolute;
+	top: 0.4rem;
+	right: 0.45rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	border: 0;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--code-comment);
+	transition:
+		color 0.15s ease,
+		background 0.15s ease;
+}
+
+.markdown pre .code-copy:hover {
+	color: var(--code-fg);
+	background: color-mix(in srgb, var(--code-fg) 8%, transparent);
+}
+
+.markdown pre .code-copy.copied {
+	color: var(--code-string);
+}
+
+.markdown pre .code-copy-check {
+	display: none;
+}
+
+.markdown pre .code-copy.copied .code-copy-icon {
+	display: none;
+}
+
+.markdown pre .code-copy.copied .code-copy-check {
+	display: block;
+}
+
+.markdown pre code,
+.markdown pre code.hljs {
+	display: block;
 	background: transparent;
 	color: inherit;
 	padding: 0;
-	font-size: 0.85em;
+	font-size: inherit;
+	overflow-x: auto;
+	white-space: pre;
+}
+
+.markdown .hljs-comment,
+.markdown .hljs-quote {
+	color: var(--code-comment);
+	font-style: italic;
+}
+
+.markdown .hljs-keyword,
+.markdown .hljs-selector-tag {
+	color: var(--code-keyword);
+}
+
+.markdown .hljs-number,
+.markdown .hljs-literal,
+.markdown .hljs-symbol,
+.markdown .hljs-bullet,
+.markdown .hljs-deletion {
+	color: var(--code-number);
+}
+
+.markdown .hljs-string,
+.markdown .hljs-regexp,
+.markdown .hljs-addition {
+	color: var(--code-string);
+}
+
+.markdown .hljs-title,
+.markdown .hljs-section,
+.markdown .hljs-name,
+.markdown .hljs-selector-id,
+.markdown .hljs-selector-class {
+	color: var(--code-title);
+}
+
+.markdown .hljs-type,
+.markdown .hljs-class .hljs-title,
+.markdown .hljs-attribute,
+.markdown .hljs-attr,
+.markdown .hljs-variable,
+.markdown .hljs-template-variable {
+	color: var(--code-attr);
+}
+
+.markdown .hljs-built_in,
+.markdown .hljs-builtin-name,
+.markdown .hljs-params {
+	color: var(--code-built);
+}
+
+.markdown .hljs-meta,
+.markdown .hljs-doctag,
+.markdown .hljs-tag {
+	color: var(--code-meta);
+}
+
+.markdown .hljs-emphasis {
+	font-style: italic;
+}
+
+.markdown .hljs-strong {
+	font-weight: 600;
 }
 
 .markdown blockquote {
