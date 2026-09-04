@@ -1,28 +1,37 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { query } from "$lib/api";
-	import { onMount } from "svelte";
 	import NotePage from "../../notes/[id]/+page.svelte";
 	import QuestionPage from "../../questions/[id]/+page.svelte";
 
 	let postType: "note" | "question" | null = $state(null);
 	let loading = $state(true);
 
-	onMount(async () => {
-		const note = await query("details:getNoteWithDetails", { id: page.params.id });
-		const result =
-			note ?? (await query("details:getQuestionWithDetails", { id: page.params.id }));
-		const unit = result?.unit;
+	$effect(() => {
+		const id = page.params.id;
 		const requestedCode = (page.params.code ?? "").toLowerCase();
+		let cancelled = false;
+		postType = null;
+		loading = true;
 
-		if (
-			result &&
-			unit &&
-			[unit.code, unit.code2].some((code) => code?.toLowerCase() === requestedCode)
-		) {
-			postType = note ? "note" : "question";
-		}
-		loading = false;
+		void (async () => {
+			const note = await query("details:getNoteWithDetails", { id });
+			const result = note ?? (await query("details:getQuestionWithDetails", { id }));
+			if (cancelled) return;
+			const unit = result?.unit;
+			if (
+				result &&
+				unit &&
+				[unit.code, unit.code2].some((code) => code?.toLowerCase() === requestedCode)
+			) {
+				postType = note ? "note" : "question";
+			}
+			loading = false;
+		})();
+
+		return () => {
+			cancelled = true;
+		};
 	});
 </script>
 
@@ -31,9 +40,13 @@
 		<p class="kicker py-16">Loading</p>
 	</div>
 {:else if postType === "note"}
-	<NotePage />
+	{#key page.params.id}
+		<NotePage />
+	{/key}
 {:else if postType === "question"}
-	<QuestionPage />
+	{#key page.params.id}
+		<QuestionPage />
+	{/key}
 {:else}
 	<div class="page">
 		<h1 class="text-ink font-serif text-3xl">Post not found</h1>

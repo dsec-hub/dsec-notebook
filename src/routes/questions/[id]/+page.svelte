@@ -2,7 +2,6 @@
 	import { query, mutation } from "$lib/api";
 	import { isAuthenticated, getToken, currentUser } from "$lib/stores/auth";
 	import { page } from "$app/state";
-	import { onMount } from "svelte";
 	import { get } from "svelte/store";
 	import VoteStack from "$lib/components/VoteStack.svelte";
 	import Markdown from "$lib/components/Markdown.svelte";
@@ -28,18 +27,33 @@
 	let editError = $state("");
 	let editLoading = $state(false);
 
-	onMount(async () => {
+	$effect(() => {
 		const id = page.params.id;
-		const result = await query("details:getQuestionWithDetails", { id });
-		if (result) {
-			question = result as QuestionDoc;
-			topic = (result as any).topic ?? null;
-			unit = (result as any).unit ?? null;
-			answers = (result as any).answers ?? [];
-			const cu = get(currentUser);
-			if (cu) isAuthor = question.authorId === cu._id;
-		}
-		loading = false;
+		let cancelled = false;
+		loading = true;
+		question = null;
+		editMode = false;
+		answerText = "";
+		answerError = "";
+		isAuthor = false;
+
+		void (async () => {
+			const result = await query("details:getQuestionWithDetails", { id });
+			if (cancelled) return;
+			if (result) {
+				question = result as QuestionDoc;
+				topic = (result as any).topic ?? null;
+				unit = (result as any).unit ?? null;
+				answers = (result as any).answers ?? [];
+				const cu = get(currentUser);
+				if (cu) isAuthor = question.authorId === cu._id;
+			}
+			loading = false;
+		})();
+
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	async function reloadAnswers() {

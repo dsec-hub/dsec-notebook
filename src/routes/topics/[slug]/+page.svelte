@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { query } from "$lib/api";
 	import { page } from "$app/state";
-	import { onMount } from "svelte";
 	import FeedRow from "$lib/components/FeedRow.svelte";
 	import { postPath } from "$lib/paths";
 	import { timeAgo } from "$lib/time";
@@ -12,19 +11,31 @@
 	let questions: QuestionDoc[] = $state([]);
 	let loading = $state(true);
 
-	onMount(async () => {
+	$effect(() => {
 		const slug = page.params.slug;
-		const t = await query("topics:getBySlug", { slug });
-		topic = t as TopicDoc;
-		if (topic) {
-			const [n, q] = await Promise.all([
-				query("notes:list", { topicId: topic._id }),
-				query("questions:list", { topicId: topic._id }),
-			]);
-			notes = n as NoteDoc[];
-			questions = q as QuestionDoc[];
-		}
-		loading = false;
+		let cancelled = false;
+		loading = true;
+		topic = null;
+
+		void (async () => {
+			const t = await query("topics:getBySlug", { slug });
+			if (cancelled) return;
+			topic = t as TopicDoc;
+			if (topic) {
+				const [n, q] = await Promise.all([
+					query("notes:list", { topicId: topic._id }),
+					query("questions:list", { topicId: topic._id }),
+				]);
+				if (cancelled) return;
+				notes = n as NoteDoc[];
+				questions = q as QuestionDoc[];
+			}
+			loading = false;
+		})();
+
+		return () => {
+			cancelled = true;
+		};
 	});
 </script>
 

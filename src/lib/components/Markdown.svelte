@@ -1,7 +1,35 @@
 <script lang="ts">
-	import { renderMarkdown } from "$lib/markdown";
+	import { page } from "$app/state";
+	import { query } from "$lib/api";
+	import { collectInternalPostIds, renderMarkdown } from "$lib/markdown";
 
 	let { content }: { content: string } = $props();
+
+	let titles = $state<Record<string, string>>({});
+	const origin = $derived(page.url.origin);
+	const postIdsKey = $derived(collectInternalPostIds(content, origin).join("\0"));
+	const html = $derived(renderMarkdown(content, { origin, titles }));
+
+	$effect(() => {
+		const ids = postIdsKey ? postIdsKey.split("\0") : [];
+		if (ids.length === 0) {
+			titles = {};
+			return;
+		}
+
+		let cancelled = false;
+		void query("posts:getTitles", { ids })
+			.then((result: Record<string, string>) => {
+				if (!cancelled) titles = result ?? {};
+			})
+			.catch(() => {
+				if (!cancelled) titles = {};
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	});
 
 	const copiedTimers = new WeakMap<HTMLButtonElement, ReturnType<typeof setTimeout>>();
 
@@ -45,4 +73,4 @@
 	}
 </script>
 
-<div class="markdown" use:codeCopy>{@html renderMarkdown(content)}</div>
+<div class="markdown" use:codeCopy>{@html html}</div>

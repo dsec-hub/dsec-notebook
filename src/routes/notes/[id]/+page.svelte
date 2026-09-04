@@ -2,7 +2,6 @@
 	import { query, mutation } from "$lib/api";
 	import { isAuthenticated, getToken, currentUser } from "$lib/stores/auth";
 	import { page } from "$app/state";
-	import { onMount } from "svelte";
 	import { get } from "svelte/store";
 	import VoteStack from "$lib/components/VoteStack.svelte";
 	import Markdown from "$lib/components/Markdown.svelte";
@@ -29,18 +28,33 @@
 	let editError = $state("");
 	let editLoading = $state(false);
 
-	onMount(async () => {
+	$effect(() => {
 		const id = page.params.id;
-		const result = await query("details:getNoteWithDetails", { id });
-		if (result) {
-			note = result as NoteDoc;
-			topic = (result as any).topic ?? null;
-			unit = (result as any).unit ?? null;
-			comments = (result as any).comments ?? [];
-			const cu = get(currentUser);
-			if (cu) isAuthor = note.authorId === cu._id;
-		}
-		loading = false;
+		let cancelled = false;
+		loading = true;
+		note = null;
+		editMode = false;
+		commentText = "";
+		commentError = "";
+		isAuthor = false;
+
+		void (async () => {
+			const result = await query("details:getNoteWithDetails", { id });
+			if (cancelled) return;
+			if (result) {
+				note = result as NoteDoc;
+				topic = (result as any).topic ?? null;
+				unit = (result as any).unit ?? null;
+				comments = (result as any).comments ?? [];
+				const cu = get(currentUser);
+				if (cu) isAuthor = note.authorId === cu._id;
+			}
+			loading = false;
+		})();
+
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	async function reloadComments() {

@@ -906,6 +906,38 @@ function votesGetMyVote(
 
 // ---- details ----
 
+const MAX_POST_TITLES = 50;
+
+function postsGetTitles(db: Db, args: { ids?: string[] }) {
+	const ids = [
+		...new Set(
+			(Array.isArray(args.ids) ? args.ids : [])
+				.filter((id): id is string => typeof id === "string")
+				.map((id) => id.trim())
+				.filter(Boolean),
+		),
+	].slice(0, MAX_POST_TITLES);
+
+	if (ids.length === 0) return {};
+
+	const placeholders = ids.map(() => "?").join(",");
+	const titles: Record<string, string> = {};
+
+	for (const row of db
+		.prepare(`SELECT id, title FROM notes WHERE id IN (${placeholders})`)
+		.all(...ids) as { id: string; title: string }[]) {
+		titles[row.id] = row.title;
+	}
+
+	for (const row of db
+		.prepare(`SELECT id, title FROM questions WHERE id IN (${placeholders})`)
+		.all(...ids) as { id: string; title: string }[]) {
+		if (titles[row.id] === undefined) titles[row.id] = row.title;
+	}
+
+	return titles;
+}
+
 function getNoteWithDetails(db: Db, args: { id: string }) {
 	const note = db.prepare(`SELECT ${NOTE_COLUMNS} FROM notes WHERE id = ?`).get(args.id) as
 		| Record<string, any>
@@ -1311,6 +1343,7 @@ const handlers: Record<string, Handler> = {
 	"comments:update": commentsUpdate,
 	"votes:cast": votesCast,
 	"votes:getMyVote": votesGetMyVote,
+	"posts:getTitles": postsGetTitles,
 	"details:getNoteWithDetails": getNoteWithDetails,
 	"details:getQuestionWithDetails": getQuestionWithDetails,
 	"admin:getState": adminGetState,
