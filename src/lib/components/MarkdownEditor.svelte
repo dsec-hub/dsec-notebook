@@ -99,11 +99,11 @@
 	function insertCodeBlock() {
 		const { start, end, text } = selection();
 		applyEdit((value) => {
-			const next = value.slice(0, start) + "```\n" + text + "\n```" + value.slice(end);
+			const next = value.slice(0, start) + "```ts\n" + text + "\n```" + value.slice(end);
 			return {
 				value: next,
-				start: start + 4,
-				end: start + 4 + text.length,
+				start: start + 6,
+				end: start + 6 + text.length,
 			};
 		});
 	}
@@ -309,9 +309,9 @@
 			onchange={onFilesSelected}
 		/>
 		<p class="text-faint mt-2 text-xs">
-			Markdown supported: **bold**, _italic_, `code`, [links](url), lists, quotes and code
-			blocks. LaTeX equations use $inline$ or $$display$$ notation. Paste or insert images to
-			embed them.
+			Markdown supported: **bold**, _italic_, `code`, [links](url), lists, quotes and fenced
+			code blocks (```ts). LaTeX equations use $inline$ or $$display$$ notation. Paste or
+			insert images to embed them.
 		</p>
 		{#if uploading}
 			<p class="text-muted mt-1 text-xs">Uploading image...</p>
