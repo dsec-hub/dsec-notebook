@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { query, mutation } from "$lib/api";
 	import { isAuthenticated, getToken, initAuth } from "$lib/stores/auth";
-	import { goto } from "$app/navigation";
+	import { beforeNavigate, goto } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { get } from "svelte/store";
 	import MarkdownEditor from "$lib/components/MarkdownEditor.svelte";
@@ -19,6 +19,30 @@
 	let useCustomUnit = $state(false);
 	let error = $state("");
 	let loading = $state(false);
+	let allowLeave = $state(false);
+
+	const isDirty = $derived(
+		Boolean(
+			title.trim() ||
+			content.trim() ||
+			selectedTopicId ||
+			selectedUnitId ||
+			customUnit.trim(),
+		),
+	);
+
+	beforeNavigate(({ cancel, type }) => {
+		if (allowLeave || !isDirty || type === "leave") return;
+		if (!confirm("Are you sure? You have unsaved changes.")) {
+			cancel();
+		}
+	});
+
+	function handleBeforeUnload(event: BeforeUnloadEvent) {
+		if (allowLeave || !isDirty) return;
+		event.preventDefault();
+		event.returnValue = "";
+	}
 
 	const topicOptions = $derived(
 		topics.map((topic) => ({
@@ -93,6 +117,7 @@
 				unitId,
 			})) as string;
 
+			allowLeave = true;
 			goto(unitCode ? postPath(unitCode, id) : `/notes/${id}`);
 		} catch (err: any) {
 			error = err.message ?? "Failed to publish note";
@@ -105,6 +130,8 @@
 <svelte:head>
 	<title>Post a note — Notebook</title>
 </svelte:head>
+
+<svelte:window onbeforeunload={handleBeforeUnload} />
 
 <div class="page">
 	<h1 class="text-ink font-serif text-4xl font-medium">Post a note</h1>
