@@ -4,7 +4,6 @@
 	import Avatar from "$lib/components/Avatar.svelte";
 	import { previewMarkdown } from "$lib/markdown";
 	import { timeAgo } from "$lib/time";
-	import { onMount } from "svelte";
 
 	type Profile = {
 		_id: string;
@@ -36,9 +35,23 @@
 	let loading = $state(true);
 	let tab: "posts" | "comments" = $state("posts");
 
-	onMount(async () => {
-		profile = (await query("users:getPublicProfile", { id: page.params.id })) as Profile | null;
-		loading = false;
+	$effect(() => {
+		const id = page.params.id;
+		let cancelled = false;
+		loading = true;
+		profile = null;
+		tab = "posts";
+
+		void (async () => {
+			const result = (await query("users:getPublicProfile", { id })) as Profile | null;
+			if (cancelled) return;
+			profile = result;
+			loading = false;
+		})();
+
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	function contentPath(type: "note" | "question", id: string) {

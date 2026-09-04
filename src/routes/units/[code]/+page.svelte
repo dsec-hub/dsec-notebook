@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { mutation, query } from "$lib/api";
 	import { page } from "$app/state";
-	import { onMount } from "svelte";
 	import { get } from "svelte/store";
 	import FeedRow from "$lib/components/FeedRow.svelte";
 	import { postPath } from "$lib/paths";
@@ -42,25 +41,37 @@
 		);
 	});
 
-	onMount(async () => {
-		await initAuth();
-		authed = get(isAuthenticated);
-		const token = getToken();
-
+	$effect(() => {
 		const code = page.params.code;
-		const u = await query("units:getByCode", { code });
-		unit = u as UnitDoc;
-		if (unit) {
-			const [n, q, pins] = await Promise.all([
-				query("notes:list", { unitId: unit._id }),
-				query("questions:list", { unitId: unit._id }),
-				token ? query("units:getPinned", { token }) : Promise.resolve([]),
-			]);
-			notes = n as NoteDoc[];
-			questions = q as QuestionDoc[];
-			pinnedIds = pins as string[];
-		}
-		loading = false;
+		let cancelled = false;
+		loading = true;
+		unit = null;
+
+		void (async () => {
+			await initAuth();
+			if (cancelled) return;
+			authed = get(isAuthenticated);
+			const token = getToken();
+			const u = await query("units:getByCode", { code });
+			if (cancelled) return;
+			unit = u as UnitDoc;
+			if (unit) {
+				const [n, q, pins] = await Promise.all([
+					query("notes:list", { unitId: unit._id }),
+					query("questions:list", { unitId: unit._id }),
+					token ? query("units:getPinned", { token }) : Promise.resolve([]),
+				]);
+				if (cancelled) return;
+				notes = n as NoteDoc[];
+				questions = q as QuestionDoc[];
+				pinnedIds = pins as string[];
+			}
+			loading = false;
+		})();
+
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	async function togglePin() {

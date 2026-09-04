@@ -2,7 +2,6 @@
 	import { query, mutation } from "$lib/api";
 	import { getToken } from "$lib/stores/auth";
 	import { goto } from "$app/navigation";
-	import { onMount } from "svelte";
 
 	let {
 		count = 0,
@@ -19,14 +18,26 @@
 	let busy = $state(false);
 	const voteCount = $derived(localCount ?? count);
 
-	onMount(async () => {
+	$effect(() => {
+		const type = targetType;
+		const id = targetId;
+		localCount = null;
+		userVote = 0;
 		const token = getToken();
 		if (!token) return;
-		try {
-			userVote = (await query("votes:getMyVote", { token, targetType, targetId })) ?? 0;
-		} catch {
-			/* ignore */
-		}
+
+		let cancelled = false;
+		void query("votes:getMyVote", { token, targetType: type, targetId: id })
+			.then((vote) => {
+				if (!cancelled) userVote = vote ?? 0;
+			})
+			.catch(() => {
+				/* ignore */
+			});
+
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	async function vote(value: 1 | -1, e: MouseEvent) {
