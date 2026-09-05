@@ -67,9 +67,9 @@
 					unitCode={note.unit
 						? note.unit.code + (note.unit.code2 ? ` / ${note.unit.code2}` : "")
 						: undefined}
-					meta="{note.authorName} · {timeAgo(
-						note.createdAt,
-					)} · {note.commentCount} comment{note.commentCount === 1 ? '' : 's'}"
+					meta={note.commentCount > 0
+						? `${note.authorName} · ${timeAgo(note.createdAt)} · ${note.commentCount} comment${note.commentCount === 1 ? "" : "s"}`
+						: `${note.authorName} · ${timeAgo(note.createdAt)}`}
 					voteCount={note.voteCount}
 					targetType="note"
 					targetId={note._id}
@@ -88,9 +88,9 @@
 						? question.unit.code +
 							(question.unit.code2 ? ` / ${question.unit.code2}` : "")
 						: undefined}
-					meta="{question.authorName} · {timeAgo(
-						question.createdAt,
-					)} · {question.answerCount} answer{question.answerCount === 1 ? '' : 's'}"
+					meta={question.answerCount > 0
+						? `${question.authorName} · ${timeAgo(question.createdAt)} · ${question.answerCount} answer${question.answerCount === 1 ? "" : "s"}`
+						: `${question.authorName} · ${timeAgo(question.createdAt)}`}
 					voteCount={question.voteCount}
 					targetType="question"
 					targetId={question._id}

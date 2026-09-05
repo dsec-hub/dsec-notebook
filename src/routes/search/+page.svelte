@@ -85,9 +85,9 @@
 					unitCode={result.unit
 						? result.unit.code + (result.unit.code2 ? ` / ${result.unit.code2}` : "")
 						: undefined}
-					meta="{result.authorName} · {timeAgo(
-						result.createdAt,
-					)} · {result.commentCount} comment{result.commentCount === 1 ? '' : 's'}"
+					meta={result.commentCount > 0
+						? `${result.authorName} · ${timeAgo(result.createdAt)} · ${result.commentCount} comment${result.commentCount === 1 ? "" : "s"}`
+						: `${result.authorName} · ${timeAgo(result.createdAt)}`}
 					voteCount={result.voteCount}
 					targetType="note"
 					targetId={result._id}
@@ -101,9 +101,9 @@
 					unitCode={result.unit
 						? result.unit.code + (result.unit.code2 ? ` / ${result.unit.code2}` : "")
 						: undefined}
-					meta="{result.authorName} · {timeAgo(
-						result.createdAt,
-					)} · {result.answerCount} answer{result.answerCount === 1 ? '' : 's'}"
+					meta={result.answerCount > 0
+						? `${result.authorName} · ${timeAgo(result.createdAt)} · ${result.answerCount} answer${result.answerCount === 1 ? "" : "s"}`
+						: `${result.authorName} · ${timeAgo(result.createdAt)}`}
 					voteCount={result.voteCount}
 					targetType="question"
 					targetId={result._id}

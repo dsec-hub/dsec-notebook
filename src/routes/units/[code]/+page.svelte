@@ -174,9 +174,9 @@
 					title={note.title}
 					content={note.content}
 					unitCode={unit.code + (unit.code2 ? ` / ${unit.code2}` : "")}
-					meta="{timeAgo(
-						note.createdAt,
-					)} · {note.commentCount} comment{note.commentCount === 1 ? '' : 's'}"
+					meta={note.commentCount > 0
+						? `${timeAgo(note.createdAt)} · ${note.commentCount} comment${note.commentCount === 1 ? "" : "s"}`
+						: timeAgo(note.createdAt)}
 					voteCount={note.voteCount}
 					targetType="note"
 					targetId={note._id}
@@ -192,9 +192,9 @@
 					title={question.title}
 					content={question.content}
 					unitCode={unit.code + (unit.code2 ? ` / ${unit.code2}` : "")}
-					meta="{question.authorName} · {timeAgo(
-						question.createdAt,
-					)} · {question.answerCount} answer{question.answerCount === 1 ? '' : 's'}"
+					meta={question.answerCount > 0
+						? `${question.authorName} · ${timeAgo(question.createdAt)} · ${question.answerCount} answer${question.answerCount === 1 ? "" : "s"}`
+						: `${question.authorName} · ${timeAgo(question.createdAt)}`}
 					voteCount={question.voteCount}
 					targetType="question"
 					targetId={question._id}
