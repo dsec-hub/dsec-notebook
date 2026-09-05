@@ -18,7 +18,10 @@
 	onMount(async () => {
 		const [n, u] = await Promise.all([query("notes:list", {}), query("units:getAll")]);
 		const unitMap = new Map((u as UnitDoc[]).map((unit) => [unit._id, unit]));
-		notes = (n as NoteDoc[]).map((note) => ({ ...note, unit: unitMap.get(note.unitId) }));
+		notes = (n as NoteDoc[]).map((note) => ({
+			...note,
+			unit: unitMap.get(note.unitId),
+		}));
 		units = u as UnitDoc[];
 		loading = false;
 	});
@@ -43,7 +46,7 @@
 </script>
 
 <svelte:head>
-	<title>Notes — Notebook</title>
+	<title>Notes — DSEC Notebook</title>
 </svelte:head>
 
 <div class="page">

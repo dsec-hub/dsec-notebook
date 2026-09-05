@@ -45,7 +45,7 @@
 </script>
 
 <svelte:head>
-	<title>Questions — Notebook</title>
+	<title>Questions — DSEC Notebook</title>
 </svelte:head>
 
 <div class="page">

@@ -40,15 +40,19 @@
 </script>
 
 <svelte:head>
-	<title>{topic?.name ?? "Topic"} — Notebook</title>
+	<title>{topic?.name ?? "Topic"} — DSEC Notebook</title>
 </svelte:head>
 
 <div class="page">
 	{#if loading}
 		<p class="kicker py-16">Loading</p>
 	{:else if topic}
-		<p class="kicker"><a href="/" class="hover:text-primary">Home</a> · Topic</p>
-		<h1 class="text-ink mt-2 font-serif text-4xl font-medium">{topic.name}</h1>
+		<p class="kicker">
+			<a href="/" class="hover:text-primary">Home</a> · Topic
+		</p>
+		<h1 class="text-ink mt-2 font-serif text-4xl font-medium">
+			{topic.name}
+		</h1>
 		{#if topic.description}
 			<p class="text-muted mt-2 text-[15px]">{topic.description}</p>
 		{/if}

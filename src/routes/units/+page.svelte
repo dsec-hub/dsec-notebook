@@ -21,7 +21,7 @@
 </script>
 
 <svelte:head>
-	<title>Units — Notebook</title>
+	<title>Units — DSEC Notebook</title>
 </svelte:head>
 
 <div class="page">
@@ -47,7 +47,9 @@
 	{:else if units.length === 0}
 		<p class="text-muted py-16 text-sm">No units yet.</p>
 	{:else if visible.length === 0}
-		<p class="text-muted py-16 text-sm">No units match “{searchQuery.trim()}”.</p>
+		<p class="text-muted py-16 text-sm">
+			No units match “{searchQuery.trim()}”.
+		</p>
 	{:else}
 		<div class="grid grid-cols-1 gap-3 pt-6 sm:grid-cols-2 lg:grid-cols-3">
 			{#each visible as unit (unit._id)}
