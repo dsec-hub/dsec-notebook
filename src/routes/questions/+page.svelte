@@ -5,7 +5,6 @@
 	import UnitFilter from "$lib/components/UnitFilter.svelte";
 	import { postPath } from "$lib/paths";
 	import { unitMatchesQuery } from "$lib/search";
-	import { timeAgo } from "$lib/time";
 	import type { QuestionDoc, UnitDoc } from "$lib/types";
 
 	let questions: (QuestionDoc & { unit?: UnitDoc })[] = $state([]);
@@ -95,9 +94,11 @@
 				unitCode={question.unit
 					? question.unit.code + (question.unit.code2 ? ` / ${question.unit.code2}` : "")
 					: undefined}
-				meta="{question.authorName} · {timeAgo(
-					question.createdAt,
-				)} · {question.answerCount} answer{question.answerCount === 1 ? '' : 's'}"
+				authorName={question.authorName}
+				authorId={question.authorId}
+				extra={question.answerCount > 0
+					? `${question.answerCount} answer${question.answerCount === 1 ? "" : "s"}`
+					: undefined}
 				voteCount={question.voteCount}
 				targetType="question"
 				targetId={question._id}

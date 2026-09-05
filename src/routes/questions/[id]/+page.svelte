@@ -8,6 +8,7 @@
 	import MarkdownEditor from "$lib/components/MarkdownEditor.svelte";
 	import CommentThread from "$lib/components/CommentThread.svelte";
 	import Seo from "$lib/components/Seo.svelte";
+	import ShareButton from "$lib/components/ShareButton.svelte";
 	import { postSeo } from "$lib/seo";
 	import { timeAgo } from "$lib/time";
 	import type { QuestionDoc, CommentDoc, TopicDoc, UnitDoc } from "$lib/types";
@@ -187,11 +188,13 @@
 					{/if}
 				{/if}
 				{#if !editMode}
-					<p class="kicker mt-3">
+					<div class="kicker mt-3">
 						<a href={`/users/${question.authorId}`} class="hover:text-primary"
 							>{question.authorName}</a
 						>
 						· {timeAgo(question.createdAt)}
+						·
+						<ShareButton title={question.title} />
 						{#if isAuthor}
 							·
 							<button
@@ -212,7 +215,7 @@
 								</button>
 							{/if}
 						{/if}
-					</p>
+					</div>
 				{/if}
 			</div>
 		</div>
@@ -242,7 +245,9 @@
 		{/if}
 
 		<section class="border-rule mt-12 border-t pt-8">
-			<p class="kicker mb-6">Answers ({answers.length})</p>
+			<p class="kicker mb-6">
+				Answers{answers.length > 0 ? ` (${answers.length})` : ""}
+			</p>
 
 			{#if get(isAuthenticated)}
 				<div class="mb-8">

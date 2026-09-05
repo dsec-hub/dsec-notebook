@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { previewMarkdown } from "$lib/markdown";
 	import { unitPath } from "$lib/paths";
+	import ShareButton from "./ShareButton.svelte";
 	import VoteStack from "./VoteStack.svelte";
 
 	let {
@@ -9,6 +10,9 @@
 		content,
 		unitCode,
 		meta,
+		authorName,
+		authorId,
+		extra,
 		voteCount = 0,
 		targetType,
 		targetId,
@@ -18,7 +22,10 @@
 		title: string;
 		content?: string;
 		unitCode?: string;
-		meta: string;
+		meta?: string;
+		authorName?: string;
+		authorId?: string;
+		extra?: string;
 		voteCount?: number;
 		targetType: "note" | "question";
 		targetId: string;
@@ -48,6 +55,23 @@
 				{previewMarkdown(content)}
 			</p>
 		{/if}
-		<p class="kicker mt-1.5">{meta}</p>
+		<div class="kicker mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+			{#if authorName}
+				{#if authorId}
+					<a href={`/users/${authorId}`} class="hover:text-primary">{authorName}</a>
+				{:else}
+					<span>{authorName}</span>
+				{/if}
+			{/if}
+			{#if extra}
+				{#if authorName}<span aria-hidden="true">·</span>{/if}
+				<span>{extra}</span>
+			{/if}
+			{#if meta}
+				{#if authorName || extra}<span aria-hidden="true">·</span>{/if}
+				<span>{meta}</span>
+			{/if}
+			<ShareButton url={href} {title} />
+		</div>
 	</div>
 </article>

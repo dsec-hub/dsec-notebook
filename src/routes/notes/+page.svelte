@@ -5,7 +5,6 @@
 	import UnitFilter from "$lib/components/UnitFilter.svelte";
 	import { postPath } from "$lib/paths";
 	import { unitMatchesQuery } from "$lib/search";
-	import { timeAgo } from "$lib/time";
 	import type { NoteDoc, UnitDoc } from "$lib/types";
 
 	let notes: (NoteDoc & { unit?: UnitDoc })[] = $state([]);
@@ -96,9 +95,11 @@
 				unitCode={note.unit
 					? note.unit.code + (note.unit.code2 ? ` / ${note.unit.code2}` : "")
 					: undefined}
-				meta="{note.authorName} · {timeAgo(
-					note.createdAt,
-				)} · {note.commentCount} comment{note.commentCount === 1 ? '' : 's'}"
+				authorName={note.authorName}
+				authorId={note.authorId}
+				extra={note.commentCount > 0
+					? `${note.commentCount} comment${note.commentCount === 1 ? "" : "s"}`
+					: undefined}
 				voteCount={note.voteCount}
 				targetType="note"
 				targetId={note._id}
