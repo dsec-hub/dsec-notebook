@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { query } from "$lib/api";
+	import Seo from "$lib/components/Seo.svelte";
 	import NotePage from "../../notes/[id]/+page.svelte";
 	import QuestionPage from "../../questions/[id]/+page.svelte";
 
@@ -34,6 +35,10 @@
 		};
 	});
 </script>
+
+{#if loading || !postType}
+	<Seo seo={page.data.seo} />
+{/if}
 
 {#if loading}
 	<div class="page">

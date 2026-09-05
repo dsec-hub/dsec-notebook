@@ -5,6 +5,8 @@
 	import FeedRow from "$lib/components/FeedRow.svelte";
 	import { postPath } from "$lib/paths";
 	import { getToken, initAuth, isAuthenticated } from "$lib/stores/auth";
+	import Seo from "$lib/components/Seo.svelte";
+	import { unitSeo } from "$lib/seo";
 	import { timeAgo } from "$lib/time";
 	import type { NoteDoc, QuestionDoc, UnitDoc } from "$lib/types";
 
@@ -22,6 +24,7 @@
 
 	const isPinned = $derived(unit ? pinnedIds.includes(unit._id) : false);
 	const canPin = $derived(isPinned || pinnedIds.length < MAX_PINS);
+	const seo = $derived.by(() => (unit ? unitSeo(unit) : page.data.seo));
 
 	const visibleNotes = $derived.by(() => {
 		const q = searchQuery.trim().toLowerCase();
@@ -98,15 +101,15 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{unit?.code ?? "Unit"} — Notebook</title>
-</svelte:head>
+<Seo {seo} />
 
 <div class="page">
 	{#if loading}
 		<p class="kicker py-16">Loading</p>
 	{:else if unit}
-		<p class="kicker"><a href="/" class="hover:text-primary">Home</a> · Unit</p>
+		<p class="kicker">
+			<a href="/" class="hover:text-primary">Home</a> · Unit
+		</p>
 		<div class="mt-2 flex items-center gap-2">
 			<h1 class="text-ink font-serif text-4xl font-medium">
 				{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}
@@ -171,7 +174,7 @@
 					title={note.title}
 					content={note.content}
 					unitCode={unit.code + (unit.code2 ? ` / ${unit.code2}` : "")}
-					meta="{note.authorName} · {timeAgo(
+					meta="{timeAgo(
 						note.createdAt,
 					)} · {note.commentCount} comment{note.commentCount === 1 ? '' : 's'}"
 					voteCount={note.voteCount}

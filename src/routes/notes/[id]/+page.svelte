@@ -7,6 +7,8 @@
 	import Markdown from "$lib/components/Markdown.svelte";
 	import MarkdownEditor from "$lib/components/MarkdownEditor.svelte";
 	import CommentThread from "$lib/components/CommentThread.svelte";
+	import Seo from "$lib/components/Seo.svelte";
+	import { postSeo } from "$lib/seo";
 	import { timeAgo } from "$lib/time";
 	import type { NoteDoc, CommentDoc, TopicDoc, UnitDoc } from "$lib/types";
 
@@ -27,6 +29,8 @@
 	let editContent = $state("");
 	let editError = $state("");
 	let editLoading = $state(false);
+
+	const seo = $derived.by(() => (note ? postSeo({ ...note, unit }) : page.data.seo));
 
 	$effect(() => {
 		const id = page.params.id;
@@ -157,9 +161,7 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{note?.title ?? "Loading..."} — Notebook</title>
-</svelte:head>
+<Seo {seo} />
 
 <div class="page">
 	{#if loading}

@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import Navbar from "$lib/components/Navbar.svelte";
+	import { SITE_DESCRIPTION } from "$lib/seo";
 	import { initAuth } from "$lib/stores/auth";
 	import { onMount } from "svelte";
 	import "./layout.css";
@@ -24,6 +26,9 @@
 <svelte:head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	{#if !page.data.seo}
+		<meta name="description" content={SITE_DESCRIPTION} />
+	{/if}
 </svelte:head>
 
 <div class="bg-surface flex min-h-screen flex-col">
