@@ -7,7 +7,7 @@
 		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 		<meta name="apple-mobile-web-app-title" content="Notebook" />
 		<meta name="format-detection" content="telephone=no" />
-		<meta name="theme-color" content="#ffffff" />
+		<meta name="theme-color" content="#ea4c65" />
 		<script>
 			(function () {
 				var stored = localStorage.getItem("dsec_theme");
@@ -17,8 +17,6 @@
 				var root = document.documentElement;
 				root.classList.toggle("dark", dark);
 				root.style.colorScheme = dark ? "dark" : "light";
-				var meta = document.querySelector('meta[name="theme-color"]');
-				if (meta) meta.setAttribute("content", dark ? "#131014" : "#ffffff");
 			})();
 		</script>
 		<link rel="manifest" href="/manifest.webmanifest" />
