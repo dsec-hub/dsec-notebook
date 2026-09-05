@@ -33,7 +33,7 @@ export default defineConfig({
 				scope: "/",
 				display: "standalone",
 				background_color: "#ffffff",
-				theme_color: "#ffffff",
+				theme_color: "#ea4c65",
 				lang: "en",
 			},
 			pwaAssets: {
