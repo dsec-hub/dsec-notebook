@@ -43,7 +43,9 @@
 		tab = "posts";
 
 		void (async () => {
-			const result = (await query("users:getPublicProfile", { id })) as Profile | null;
+			const result = (await query("users:getPublicProfile", {
+				id,
+			})) as Profile | null;
 			if (cancelled) return;
 			profile = result;
 			loading = false;
@@ -60,7 +62,7 @@
 </script>
 
 <svelte:head>
-	<title>{profile?.name ?? "Profile"} — Notebook</title>
+	<title>{profile?.name ?? "Profile"} — DSEC Notebook</title>
 </svelte:head>
 
 <div class="page">
@@ -71,7 +73,9 @@
 			<Avatar src={profile.avatarUrl} name={profile.name} size="xl" />
 			<div>
 				<p class="kicker">Contributor</p>
-				<h1 class="text-ink mt-2 font-serif text-4xl font-medium">{profile.name}</h1>
+				<h1 class="text-ink mt-2 font-serif text-4xl font-medium">
+					{profile.name}
+				</h1>
 				<p class="text-muted mt-2 text-sm">
 					Member since {new Date(profile._creationTime).toLocaleDateString(undefined, {
 						month: "long",
@@ -83,7 +87,9 @@
 
 		<section class="border-rule mt-10 grid grid-cols-2 border-y sm:grid-cols-4">
 			<div class="border-rule border-r px-4 py-5 first:pl-0">
-				<p class="text-ink font-serif text-3xl">{profile.totalContributions}</p>
+				<p class="text-ink font-serif text-3xl">
+					{profile.totalContributions}
+				</p>
 				<p class="kicker text-muted mt-1">Contributions</p>
 			</div>
 			<div class="border-rule border-r px-4 py-5">
@@ -91,11 +97,15 @@
 				<p class="kicker text-muted mt-1">Notes</p>
 			</div>
 			<div class="border-rule border-r px-4 py-5">
-				<p class="text-ink font-serif text-3xl">{profile.questionCount}</p>
+				<p class="text-ink font-serif text-3xl">
+					{profile.questionCount}
+				</p>
 				<p class="kicker text-muted mt-1">Questions</p>
 			</div>
 			<div class="px-4 py-5">
-				<p class="text-ink font-serif text-3xl">{profile.commentCount}</p>
+				<p class="text-ink font-serif text-3xl">
+					{profile.commentCount}
+				</p>
 				<p class="kicker text-muted mt-1">Comments</p>
 			</div>
 		</section>
@@ -161,7 +171,9 @@
 						<p class="text-ink mt-2 text-sm leading-relaxed">
 							{previewMarkdown(comment.content)}
 						</p>
-						<p class="text-faint mt-1 text-xs">{timeAgo(comment.createdAt)}</p>
+						<p class="text-faint mt-1 text-xs">
+							{timeAgo(comment.createdAt)}
+						</p>
 					</article>
 				{/each}
 			{/if}

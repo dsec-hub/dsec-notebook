@@ -128,7 +128,7 @@
 </script>
 
 <svelte:head>
-	<title>Post a note — Notebook</title>
+	<title>Post a note — DSEC Notebook</title>
 </svelte:head>
 
 <svelte:window onbeforeunload={handleBeforeUnload} />

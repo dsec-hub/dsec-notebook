@@ -15,7 +15,9 @@
 		searchQuery = new URL(window.location.href).searchParams.get("q") ?? "";
 		if (searchQuery) {
 			ranQuery = true;
-			results = (await query("search:all", { query: searchQuery })) as SearchResult[];
+			results = (await query("search:all", {
+				query: searchQuery,
+			})) as SearchResult[];
 		}
 		loading = false;
 	});
@@ -25,7 +27,7 @@
 </script>
 
 <svelte:head>
-	<title>{searchQuery ? `Search: ${searchQuery}` : "Search"} — Notebook</title>
+	<title>{searchQuery ? `Search: ${searchQuery}` : "Search"} — DSEC Notebook</title>
 </svelte:head>
 
 <div class="page">
@@ -110,7 +112,9 @@
 			{/if}
 		{:else}
 			{#if unitResults.length === 0}
-				<p class="text-muted text-sm">No results found for “{searchQuery}”.</p>
+				<p class="text-muted text-sm">
+					No results found for “{searchQuery}”.
+				</p>
 			{/if}
 		{/each}
 	{/if}

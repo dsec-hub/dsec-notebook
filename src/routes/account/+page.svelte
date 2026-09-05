@@ -111,7 +111,11 @@
 		passwordError = "";
 		passwordMessage = "";
 		try {
-			await mutation("users:changePassword", { token, currentPassword, newPassword });
+			await mutation("users:changePassword", {
+				token,
+				currentPassword,
+				newPassword,
+			});
 			currentPassword = "";
 			newPassword = "";
 			confirmPassword = "";
@@ -131,7 +135,7 @@
 </script>
 
 <svelte:head>
-	<title>Account — Notebook</title>
+	<title>Account — DSEC Notebook</title>
 </svelte:head>
 
 <div class="page">
@@ -202,8 +206,12 @@
 					</p>
 				</div>
 
-				{#if profileError}<p class="text-primary text-sm">{profileError}</p>{/if}
-				{#if profileMessage}<p class="text-secondary text-sm">{profileMessage}</p>{/if}
+				{#if profileError}<p class="text-primary text-sm">
+						{profileError}
+					</p>{/if}
+				{#if profileMessage}<p class="text-secondary text-sm">
+						{profileMessage}
+					</p>{/if}
 				<button type="submit" disabled={profileSaving} class="btn-primary">
 					{profileSaving ? "Saving..." : "Save profile"}
 				</button>
@@ -250,8 +258,12 @@
 						required
 					/>
 				</div>
-				{#if passwordError}<p class="text-primary text-sm">{passwordError}</p>{/if}
-				{#if passwordMessage}<p class="text-secondary text-sm">{passwordMessage}</p>{/if}
+				{#if passwordError}<p class="text-primary text-sm">
+						{passwordError}
+					</p>{/if}
+				{#if passwordMessage}<p class="text-secondary text-sm">
+						{passwordMessage}
+					</p>{/if}
 				<button type="submit" disabled={passwordSaving} class="btn-primary">
 					{passwordSaving ? "Changing..." : "Change password"}
 				</button>

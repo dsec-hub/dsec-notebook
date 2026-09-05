@@ -16,7 +16,12 @@
 	type WeekStat = { weekStart: number; notes: number; questions: number };
 	type Stats = {
 		weeks: WeekStat[];
-		totals: { notes: number; questions: number; users: number; units: number };
+		totals: {
+			notes: number;
+			questions: number;
+			users: number;
+			units: number;
+		};
 	};
 
 	type AdminUser = UserDoc & { noteCount: number; questionCount: number };
@@ -54,18 +59,33 @@
 	let pageError = $state("");
 
 	// Unit editor
-	let unitForm = $state({ id: "", code: "", code2: "", name: "", description: "" });
+	let unitForm = $state({
+		id: "",
+		code: "",
+		code2: "",
+		name: "",
+		description: "",
+	});
 	let unitBusy = $state(false);
 	let unitError = $state("");
 	let unitSuccess = $state("");
 
 	// Account editor
-	let userForm = $state<{ id: string; email: string; name: string; role: string } | null>(null);
+	let userForm = $state<{
+		id: string;
+		email: string;
+		name: string;
+		role: string;
+	} | null>(null);
 	let userBusy = $state(false);
 	let userError = $state("");
 
 	// Note editor
-	let noteForm = $state<{ id: string; title: string; content: string } | null>(null);
+	let noteForm = $state<{
+		id: string;
+		title: string;
+		content: string;
+	} | null>(null);
 	let noteBusy = $state(false);
 	let noteError = $state("");
 
@@ -207,7 +227,10 @@
 		unitError = "";
 		unitSuccess = "";
 		try {
-			await mutation("admin:unitsDelete", { token: adminToken(), id: unit._id });
+			await mutation("admin:unitsDelete", {
+				token: adminToken(),
+				id: unit._id,
+			});
 			units = (await query("units:getAll")) as UnitDoc[];
 		} catch (err: any) {
 			unitError = err.message ?? "Failed to delete unit";
@@ -217,7 +240,12 @@
 	// ---- accounts ----
 
 	function startEditUser(user: AdminUser) {
-		userForm = { id: user._id, email: user.email, name: user.name, role: user.role };
+		userForm = {
+			id: user._id,
+			email: user.email,
+			name: user.name,
+			role: user.role,
+		};
 		userError = "";
 	}
 
@@ -239,7 +267,9 @@
 				name: userForm.name,
 				role: userForm.role,
 			});
-			users = (await query("admin:usersList", { token: adminToken() })) as AdminUser[];
+			users = (await query("admin:usersList", {
+				token: adminToken(),
+			})) as AdminUser[];
 			resetUserForm();
 		} catch (err: any) {
 			userError = err.message ?? "Failed to update account";
@@ -258,7 +288,9 @@
 				name: user.name,
 				role: user.role === "admin" ? "user" : "admin",
 			});
-			users = (await query("admin:usersList", { token: adminToken() })) as AdminUser[];
+			users = (await query("admin:usersList", {
+				token: adminToken(),
+			})) as AdminUser[];
 		} catch (err: any) {
 			userError = err.message ?? "Failed to change role";
 		}
@@ -268,8 +300,13 @@
 		if (!confirm(`Delete ${user.email} and all of their content?`)) return;
 		userError = "";
 		try {
-			await mutation("admin:usersDelete", { token: adminToken(), id: user._id });
-			users = (await query("admin:usersList", { token: adminToken() })) as AdminUser[];
+			await mutation("admin:usersDelete", {
+				token: adminToken(),
+				id: user._id,
+			});
+			users = (await query("admin:usersList", {
+				token: adminToken(),
+			})) as AdminUser[];
 		} catch (err: any) {
 			userError = err.message ?? "Failed to delete account";
 		}
@@ -299,7 +336,9 @@
 				title: noteForm.title,
 				content: noteForm.content,
 			});
-			notes = (await query("admin:notesList", { token: adminToken() })) as AdminNote[];
+			notes = (await query("admin:notesList", {
+				token: adminToken(),
+			})) as AdminNote[];
 			resetNoteForm();
 		} catch (err: any) {
 			noteError = err.message ?? "Failed to update note";
@@ -312,8 +351,13 @@
 		if (!confirm(`Delete note "${note.title}"?`)) return;
 		noteError = "";
 		try {
-			await mutation("admin:notesDelete", { token: adminToken(), id: note._id });
-			notes = (await query("admin:notesList", { token: adminToken() })) as AdminNote[];
+			await mutation("admin:notesDelete", {
+				token: adminToken(),
+				id: note._id,
+			});
+			notes = (await query("admin:notesList", {
+				token: adminToken(),
+			})) as AdminNote[];
 		} catch (err: any) {
 			noteError = err.message ?? "Failed to delete note";
 		}
@@ -321,7 +365,7 @@
 </script>
 
 <svelte:head>
-	<title>Admin — Notebook</title>
+	<title>Admin — DSEC Notebook</title>
 </svelte:head>
 
 <div class="page">
@@ -473,25 +517,35 @@
 				<div class="grid grid-cols-2 gap-4 py-8 lg:grid-cols-4">
 					<div class="border-rule border p-5">
 						<p class="kicker">Notes</p>
-						<p class="text-ink mt-2 font-serif text-4xl">{stats.totals.notes}</p>
+						<p class="text-ink mt-2 font-serif text-4xl">
+							{stats.totals.notes}
+						</p>
 					</div>
 					<div class="border-rule border p-5">
 						<p class="kicker">Questions</p>
-						<p class="text-ink mt-2 font-serif text-4xl">{stats.totals.questions}</p>
+						<p class="text-ink mt-2 font-serif text-4xl">
+							{stats.totals.questions}
+						</p>
 					</div>
 					<div class="border-rule border p-5">
 						<p class="kicker">Accounts</p>
-						<p class="text-ink mt-2 font-serif text-4xl">{stats.totals.users}</p>
+						<p class="text-ink mt-2 font-serif text-4xl">
+							{stats.totals.users}
+						</p>
 					</div>
 					<div class="border-rule border p-5">
 						<p class="kicker">Units</p>
-						<p class="text-ink mt-2 font-serif text-4xl">{stats.totals.units}</p>
+						<p class="text-ink mt-2 font-serif text-4xl">
+							{stats.totals.units}
+						</p>
 					</div>
 				</div>
 
 				<div class="border-rule border-t pt-8">
 					<div class="flex items-center justify-between">
-						<p class="kicker">Posts — last {stats.weeks.length} weeks</p>
+						<p class="kicker">
+							Posts — last {stats.weeks.length} weeks
+						</p>
 						<div class="flex gap-4 text-[11px] tracking-[0.14em] uppercase">
 							<span class="text-ink"><span class="text-primary">■</span> Notes</span>
 							<span class="text-ink"
@@ -540,7 +594,9 @@
 									<p class="text-ink font-medium">
 										{unit.code}{unit.code2 ? ` / ${unit.code2}` : ""}
 									</p>
-									<p class="text-muted truncate text-sm">{unit.name}</p>
+									<p class="text-muted truncate text-sm">
+										{unit.name}
+									</p>
 								</div>
 								<div class="flex shrink-0 gap-3">
 									<button
@@ -567,7 +623,9 @@
 					onsubmit={saveUnit}
 					class="border-rule sticky top-5 h-fit space-y-5 border p-5"
 				>
-					<p class="kicker">{unitForm.id ? "Edit unit" : "Add unit"}</p>
+					<p class="kicker">
+						{unitForm.id ? "Edit unit" : "Add unit"}
+					</p>
 					<div>
 						<label for="unit-code" class="kicker mb-2 block">Code</label>
 						<input
@@ -643,8 +701,12 @@
 							<div class="border-rule border-b py-3">
 								<div class="flex items-center justify-between gap-4">
 									<div class="min-w-0">
-										<p class="text-ink font-medium">{user.name}</p>
-										<p class="text-muted truncate text-sm">{user.email}</p>
+										<p class="text-ink font-medium">
+											{user.name}
+										</p>
+										<p class="text-muted truncate text-sm">
+											{user.email}
+										</p>
 									</div>
 									<span class="chip {user.role === 'admin' ? 'chip-active' : ''}">
 										{user.role}
@@ -765,7 +827,9 @@
 							<div class="border-rule border-b py-3">
 								<div class="flex items-start justify-between gap-4">
 									<div class="min-w-0">
-										<p class="text-ink font-medium">{note.title}</p>
+										<p class="text-ink font-medium">
+											{note.title}
+										</p>
 										<p class="text-muted mt-1 truncate text-sm">
 											{note.unitCode
 												? note.unitCode +
