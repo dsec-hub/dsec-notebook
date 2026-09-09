@@ -78,8 +78,8 @@
 			return;
 		}
 		const hasUnit = useCustomUnit ? !!customUnit.trim() : !!selectedUnitId;
-		if (!selectedTopicId && !hasUnit) {
-			error = "Please select a topic or a unit";
+		if (!hasUnit) {
+			error = "Please select a unit";
 			return;
 		}
 
@@ -162,7 +162,6 @@
 		</div>
 
 		<div>
-			<p class="text-muted mb-3 text-xs">Choose at least one topic or unit.</p>
 			<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
 				<div>
 					<label for="topic" class="kicker mb-2 block">Topic (optional)</label>
@@ -204,6 +203,7 @@
 							bind:value={customUnit}
 							placeholder="e.g., SIT384"
 							class="field mt-2"
+							required
 						/>
 					{/if}
 				</div>

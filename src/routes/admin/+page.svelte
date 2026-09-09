@@ -471,14 +471,18 @@
 			</a>
 		{/if}
 	{:else}
-		<div class="border-rule flex items-end justify-between gap-4 border-b pb-6">
+		<div
+			class="border-rule flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-end sm:justify-between"
+		>
 			<div>
 				<p class="kicker">Admin</p>
 				<h1 class="text-ink mt-2 font-serif text-4xl font-medium">Dashboard</h1>
 			</div>
-			<div class="flex gap-2">
+			<div class="flex flex-wrap gap-2" role="tablist" aria-label="Admin sections">
 				<button
 					type="button"
+					role="tab"
+					aria-selected={tab === "overview"}
 					class="chip {tab === 'overview' ? 'chip-active' : ''}"
 					onclick={() => (tab = "overview")}
 				>
@@ -486,6 +490,8 @@
 				</button>
 				<button
 					type="button"
+					role="tab"
+					aria-selected={tab === "units"}
 					class="chip {tab === 'units' ? 'chip-active' : ''}"
 					onclick={() => (tab = "units")}
 				>
@@ -493,6 +499,8 @@
 				</button>
 				<button
 					type="button"
+					role="tab"
+					aria-selected={tab === "accounts"}
 					class="chip {tab === 'accounts' ? 'chip-active' : ''}"
 					onclick={() => (tab = "accounts")}
 				>
@@ -500,6 +508,8 @@
 				</button>
 				<button
 					type="button"
+					role="tab"
+					aria-selected={tab === "notes"}
 					class="chip {tab === 'notes' ? 'chip-active' : ''}"
 					onclick={() => (tab = "notes")}
 				>
@@ -556,7 +566,7 @@
 
 					<div class="mt-6 flex items-end gap-3 overflow-x-auto pb-2">
 						{#each stats.weeks as week}
-							<div class="flex min-w-[72px] flex-1 flex-col items-center gap-1">
+							<div class="flex min-w-18 flex-1 flex-col items-center gap-1">
 								<div class="flex h-32 w-full items-end justify-center gap-1">
 									<div
 										class="bg-primary w-1/3 max-w-6"
