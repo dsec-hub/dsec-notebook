@@ -488,7 +488,7 @@ function notesCreate(
 	const user = requireAuth(db, args.token);
 	const topicId = args.topicId?.trim() ?? "";
 	const unitId = args.unitId?.trim() ?? "";
-	if (!topicId && !unitId) throw new Error("Select a topic or a unit");
+	if (!unitId) throw new Error("Select a unit");
 	const id = newId();
 	const now = Date.now();
 	db.exec("BEGIN");
@@ -597,7 +597,7 @@ function questionsCreate(
 	const user = requireAuth(db, args.token);
 	const topicId = args.topicId?.trim() ?? "";
 	const unitId = args.unitId?.trim() ?? "";
-	if (!topicId && !unitId) throw new Error("Select a topic or a unit");
+	if (!unitId) throw new Error("Select a unit");
 	const id = newId();
 	const now = Date.now();
 	db.exec("BEGIN");
