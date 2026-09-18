@@ -19,6 +19,8 @@ const APP_SECTIONS = new Set([
 	"admin",
 	"auth",
 	"post",
+	"privacy",
+	"terms",
 ]);
 
 export function toAppPath(href: string, origin?: string): string | null {
@@ -89,6 +91,10 @@ export function appPathLabel(appPath: string, titles?: Record<string, string>): 
 			return "Sign in";
 		case "post":
 			return rest === "question" ? "New question" : "New note";
+		case "privacy":
+			return "Privacy policy";
+		case "terms":
+			return "Terms";
 		default:
 			return rest ? `${head} post` : head;
 	}

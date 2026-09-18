@@ -43,6 +43,10 @@
 				DSEC Notebook is a community resource for Deakin University students. Not affiliated
 				with Deakin University.
 			</p>
+			<nav class="mt-4 flex flex-wrap gap-x-5 gap-y-2" aria-label="Legal">
+				<a href="/privacy" class="nav-link">Privacy</a>
+				<a href="/terms" class="nav-link">Terms</a>
+			</nav>
 		</div>
 	</footer>
 </div>
