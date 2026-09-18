@@ -242,6 +242,15 @@
 						{loading ? "Sending code..." : "Send verification code"}
 					</button>
 
+					<p class="text-faint text-xs leading-relaxed">
+						By creating an account you agree to the
+						<a href="/terms" class="text-secondary hover:text-secondary-dark">Terms</a>
+						and
+						<a href="/privacy" class="text-secondary hover:text-secondary-dark"
+							>Privacy policy</a
+						>.
+					</p>
+
 					<button
 						type="button"
 						onclick={() => switchMode("signin")}
