@@ -8,18 +8,22 @@ on:
 jobs:
     deploy:
         runs-on: self-hosted
+        env:
+          PODMAN_COMPOSE_PROVIDER: podman-compose
+          XDG_RUNTIME_DIR: /run/user/1002
+          DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/1002/bus
         steps:
             - name: Checkout
               uses: actions/checkout@v4
 
             - name: Build and start containers
-              run: docker compose up -d --build --remove-orphans
+              run: podman compose up -d --build --remove-orphans
               env:
                   RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
                   RESEND_FROM: ${{ secrets.RESEND_FROM }}
 
             - name: Prune dangling images
-              run: docker image prune -f
+              run: podman image prune -f
 
             - name: Health check
               run: |
