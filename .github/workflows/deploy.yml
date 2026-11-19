@@ -9,9 +9,9 @@ jobs:
     deploy:
         runs-on: self-hosted
         env:
-          PODMAN_COMPOSE_PROVIDER: podman-compose
-          XDG_RUNTIME_DIR: /run/user/1002
-          DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/1002/bus
+            PODMAN_COMPOSE_PROVIDER: podman-compose
+            XDG_RUNTIME_DIR: /run/user/1002
+            DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/1002/bus
         steps:
             - name: Checkout
               uses: actions/checkout@v4
